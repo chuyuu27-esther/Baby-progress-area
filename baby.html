@@ -17,44 +17,46 @@
             display: flex; flex-direction: column; align-items: center;
             padding: 20px; margin: 0; min-height: 100vh;
         }
-        h2 { color: var(--deep-pink); font-weight: 600; margin-bottom: 10px; }
-        .subtitle { font-size: 0.9rem; color: #a08080; margin-bottom: 20px; }
+        h2 { color: var(--deep-pink); font-weight: 600; margin-bottom: 5px; }
+        .subtitle { font-size: 0.85rem; color: #a08080; margin-bottom: 20px; }
         .container {
             width: 100%; max-width: 420px; background: white;
-            padding: 30px 25px; border-radius: 30px;
+            padding: 25px; border-radius: 30px;
             box-shadow: var(--shadow); border: 2px solid var(--accent-pink);
         }
-        .role-switcher { display: flex; gap: 15px; margin-bottom: 25px; background: var(--accent-pink); padding: 8px; border-radius: 50px; }
-        .role-btn { flex: 1; border: none; padding: 12px; border-radius: 50px; cursor: pointer; color: var(--deep-pink); background: transparent; transition: 0.3s; }
-        .role-btn.active { background: var(--primary-pink); color: white; box-shadow: 0 4px 10px rgba(255, 183, 197, 0.5); }
-        .input-group h3 { text-align: center; color: var(--deep-pink); }
-        input[type="text"] { width: 100%; padding: 15px; margin-bottom: 12px; border: 2px solid var(--accent-pink); border-radius: 15px; }
+        .role-switcher { display: flex; gap: 10px; margin-bottom: 20px; background: var(--accent-pink); padding: 5px; border-radius: 50px; }
+        .role-btn { flex: 1; border: none; padding: 10px; border-radius: 50px; cursor: pointer; color: var(--deep-pink); background: transparent; font-weight: bold; }
+        .role-btn.active { background: var(--primary-pink); color: white; }
+        
+        .input-group h3 { text-align: center; color: var(--deep-pink); margin-top: 0; }
+        input[type="text"] { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid var(--accent-pink); border-radius: 12px; }
         .main-btn { width: 100%; background: var(--primary-pink); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; cursor: pointer; }
-        .goal-card { position: relative; border: 2px solid var(--accent-pink); border-radius: 20px; padding: 20px; background: #fffafb; }
-        .goal-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px dashed var(--accent-pink); }
-        input[type="checkbox"] { appearance: none; width: 24px; height: 24px; border: 2px solid var(--primary-pink); border-radius: 8px; position: relative; cursor: pointer; }
+        
+        .goal-card { position: relative; border: 2px solid var(--accent-pink); border-radius: 20px; padding: 15px; background: #fffafb; margin-bottom: 20px; }
+        .goal-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px dashed var(--accent-pink); }
+        input[type="checkbox"] { appearance: none; width: 22px; height: 22px; border: 2px solid var(--primary-pink); border-radius: 6px; position: relative; cursor: pointer; }
         input[type="checkbox"]:checked { background-color: var(--primary-pink); }
-        input[type="checkbox"]:checked::after { content: '❤'; position: absolute; color: white; font-size: 14px; top: 2px; left: 4px; }
+        input[type="checkbox"]:checked::after { content: '❤'; position: absolute; color: white; font-size: 12px; top: 2px; left: 4px; }
+        
         .stamp {
-            position: absolute; right: -5px; top: -20px; width: 90px; height: 90px;
+            position: absolute; right: 0; top: -10px; width: 80px; height: 80px;
             border: 3px double var(--stamp-color); color: var(--stamp-color); border-radius: 50%;
             display: none; flex-direction: column; align-items: center; justify-content: center;
             background: rgba(255, 255, 255, 0.9); transform: rotate(15deg); z-index: 10;
             animation: stampIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         @keyframes stampIn { 0% { transform: scale(3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        .history-section { width: 100%; max-width: 420px; margin-top: 30px; }
-        .history-item { background: white; padding: 15px; margin-bottom: 12px; border-radius: 20px; border-left: 6px solid var(--primary-pink); box-shadow: var(--shadow); }
-        .status-msg { text-align: center; color: var(--deep-pink); padding: 20px; }
+        
+        .history-section { width: 100%; max-width: 420px; margin-top: 20px; }
+        .history-item { background: white; padding: 12px; margin-bottom: 10px; border-radius: 15px; border-left: 5px solid var(--primary-pink); font-size: 0.9rem; }
+        .status-msg { text-align: center; color: var(--deep-pink); padding: 10px; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
 <script>
-    const secret = "0926"; // 👈 這裡改成妳們的密碼
-    while (prompt("請輸入我們的秘密代號 🤫") !== secret) {
-        alert("代號不對喔，寶貝再想一下！🐶🐰");
-    }
+    const secret = "1314"; 
+    while (prompt("請輸入我們的秘密代號 🤫") !== secret) { alert("代號不對喔，寶貝再想一下！🐶🐰"); }
 </script>
 
 <h2>今天也要一起進步 🌸</h2>
@@ -62,10 +64,15 @@
 
 <div class="container">
     <div class="role-switcher">
-        <button id="btnA" class="role-btn active" onclick="setRole('小寶')">小寶 🐶</button>
-        <button id="btnB" class="role-btn" onclick="setRole('大寶')">大寶 🐰</button>
+        <button id="btnA" class="role-btn active" onclick="setRole('小寶')">我是小寶 🐶</button>
+        <button id="btnB" class="role-btn" onclick="setRole('大寶')">我是大寶 🐰</button>
     </div>
-    <div id="app-content"><div class="status-msg">🌸 連線雲端中...</div></div>
+    
+    <div id="my-section"></div>
+    
+    <hr style="border: 0; border-top: 1px solid var(--accent-pink); margin: 25px 0;">
+    
+    <div id="partner-section"></div>
 </div>
 
 <div class="history-section">
@@ -77,11 +84,10 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set, onValue, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // ⚠️ 這裡已修正語法，請把裡面的數值填對 ⚠️
     const firebaseConfig = {
         apiKey: "AIzaSyD_SlAnOPvjuiq69qeDoRiqGp3_yu7nsiA",
         authDomain: "baby-progress-area.firebaseapp.com",
-        databaseURL: "https://baby-progress-area-default-rtdb.firebaseio.com/", // 👈 這裡一定要填 Firebase 的網址！
+        databaseURL: "https://baby-progress-area-default-rtdb.firebaseio.com/", 
         projectId: "baby-progress-area",
         storageBucket: "baby-progress-area.firebasestorage.app",
         messagingSenderId: "837749770988",
@@ -91,11 +97,11 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const dbRef = ref(db, 'coupleDataV3');
+    const dbRef = ref(db, 'coupleDataV4');
 
     let currentUser = '小寶';
-    let globalData = { active: null, history: {} };
-    const userMap = { '小寶': { icon: '🐶' }, '大寶': { icon: '🐰' } };
+    let globalData = { active: { '小寶': null, '大寶': null }, history: {} };
+    const userMap = { '小寶': { icon: '🐶', partner: '大寶' }, '大寶': { icon: '🐰', partner: '小寶' } };
 
     window.setRole = (role) => {
         currentUser = role;
@@ -105,14 +111,16 @@
     };
 
     onValue(dbRef, (snapshot) => {
-        globalData = snapshot.val() || { active: null, history: {} };
+        const d = snapshot.val();
+        globalData.active = (d && d.active) ? d.active : { '小寶': null, '大寶': null };
+        globalData.history = (d && d.history) ? d.history : {};
         render();
     });
 
     window.submitGoals = () => {
         const goals = [document.getElementById('g1').value, document.getElementById('g2').value, document.getElementById('g3').value];
-        if(goals.some(g => !g)) return alert("親愛的，目標要填滿三格喔！✨");
-        globalData.active = {
+        if(goals.some(g => !g)) return alert("要填滿三格喔！✨");
+        globalData.active[currentUser] = {
             owner: currentUser,
             date: new Date().toLocaleDateString('zh-TW', {month:'short', day:'numeric'}),
             status: 'pending',
@@ -122,53 +130,81 @@
     };
 
     window.toggleCheck = (idx) => {
-        if (!globalData.active || globalData.active.owner !== currentUser || globalData.active.status !== 'pending') return;
-        globalData.active.items[idx].d = !globalData.active.items[idx].d;
+        if (!globalData.active[currentUser] || globalData.active[currentUser].status !== 'pending') return;
+        globalData.active[currentUser].items[idx].d = !globalData.active[currentUser].items[idx].d;
         set(dbRef, globalData);
     };
 
     window.requestReview = () => {
-        if (!globalData.active.items.every(i => i.d)) return alert("加油！全部完成才能蓋章喔～💪");
-        globalData.active.status = 'reviewing';
+        if (!globalData.active[currentUser].items.every(i => i.d)) return alert("還沒做完喔！💪");
+        globalData.active[currentUser].status = 'reviewing';
         set(dbRef, globalData);
     };
 
-    window.approve = () => {
-        document.getElementById('flower-stamp').style.display = 'flex';
+    window.approvePartner = () => {
+        const partner = userMap[currentUser].partner;
+        document.getElementById('flower-stamp-partner').style.display = 'flex';
         setTimeout(() => {
-            const finished = { ...globalData.active, status: 'completed', timestamp: serverTimestamp() };
-            push(ref(db, 'coupleDataV3/history'), finished);
-            globalData.active = null;
+            const finished = { ...globalData.active[partner], status: 'completed', timestamp: serverTimestamp() };
+            push(ref(db, 'coupleDataV4/history'), finished);
+            globalData.active[partner] = null;
             set(dbRef, globalData);
-            alert("🌸 蓋章成功！今天的你也超棒！");
+            alert("🌸 幫對方蓋章成功！妳/你真貼心！");
         }, 1000);
     };
 
     function render() {
-        const content = document.getElementById('app-content');
-        const histDiv = document.getElementById('history-list');
-        if (!globalData.active) {
-            content.innerHTML = `<h3>✍ 設定今日目標</h3>
-                <input type="text" id="g1" placeholder="第一件好事..."><input type="text" id="g2" placeholder="第二件好事..."><input type="text" id="g3" placeholder="第三件好事...">
-                <button class="main-btn" onclick="submitGoals()">開始進步的一天 ✨</button>`;
+        const mySection = document.getElementById('my-section');
+        const partnerSection = document.getElementById('partner-section');
+        const partner = userMap[currentUser].partner;
+
+        // --- 渲染「我的」區域 ---
+        const myActive = globalData.active[currentUser];
+        if (!myActive) {
+            mySection.innerHTML = `
+                <div class="input-group">
+                    <h3>✍ 設定我的今日目標</h3>
+                    <input type="text" id="g1" placeholder="第一件事..."><input type="text" id="g2" placeholder="第二件事..."><input type="text" id="g3" placeholder="第三件事...">
+                    <button class="main-btn" onclick="submitGoals()">開始我的一天 ✨</button>
+                </div>`;
         } else {
-            const isOwner = globalData.active.owner === currentUser;
-            const status = globalData.active.status;
-            content.innerHTML = `<div class="goal-card">
-                <div id="flower-stamp" class="stamp"><i>🌸</i><span>已完成</span></div>
-                <h4>${userMap[globalData.active.owner].icon}${globalData.active.owner} 的任務</h4>
-                ${globalData.active.items.map((it, i) => `
-                    <div class="goal-item">
-                        <input type="checkbox" ${it.d ? 'checked' : ''} ${(!isOwner || status!=='pending') ? 'disabled' : ''} onclick="toggleCheck(${i})">
-                        <span style="${it.d ? 'text-decoration:line-through;color:#bbb' : ''}">${it.t}</span>
-                    </div>`).join('')}
-                <div style="margin-top:20px;">
-                    ${isOwner ? (status === 'pending' ? '<button class="main-btn" onclick="requestReview()">申請蓋章 ✨</button>' : '<p class="status-msg">等待蓋章中...</p>') :
-                    (status === 'reviewing' ? '<button class="main-btn" style="background:#ff6b81" onclick="approve()">💮 給你花花印章</button>' : '<p class="status-msg">他正在努力中...</p>')}
-                </div></div>`;
+            mySection.innerHTML = `
+                <div class="goal-card">
+                    <h4>我的任務 (${myActive.date})</h4>
+                    ${myActive.items.map((it, i) => `
+                        <div class="goal-item">
+                            <input type="checkbox" ${it.d ? 'checked' : ''} ${myActive.status!=='pending' ? 'disabled' : ''} onclick="toggleCheck(${i})">
+                            <span style="${it.d ? 'text-decoration:line-through;color:#bbb' : ''}">${it.t}</span>
+                        </div>`).join('')}
+                    <div style="margin-top:15px;">
+                        ${myActive.status === 'pending' ? '<button class="main-btn" onclick="requestReview()">做完了！請對方蓋章</button>' : '<p class="status-msg">⏳ 等待對方蓋章中...</p>'}
+                    </div>
+                </div>`;
         }
+
+        // --- 渲染「對方的」區域 ---
+        const pActive = globalData.active[partner];
+        if (!pActive) {
+            partnerSection.innerHTML = `<p class="status-msg">🍵 ${partner} ${userMap[partner].icon} 還沒設定目標...</p>`;
+        } else {
+            partnerSection.innerHTML = `
+                <div class="goal-card" style="border-style: solid; opacity: 0.9;">
+                    <div id="flower-stamp-partner" class="stamp"><i>🌸</i><span>棒棒</span></div>
+                    <h4>${partner} ${userMap[partner].icon} 的進度</h4>
+                    ${pActive.items.map(it => `
+                        <div class="goal-item">
+                            <input type="checkbox" ${it.d ? 'checked' : ''} disabled>
+                            <span style="${it.d ? 'text-decoration:line-through;color:#bbb' : ''}">${it.t}</span>
+                        </div>`).join('')}
+                    <div style="margin-top:15px;">
+                        ${pActive.status === 'reviewing' ? `<button class="main-btn" style="background:#ff6b81" onclick="approvePartner()">💮 幫 ${partner} 蓋章</button>` : `<p class="status-msg">加油中！全部打勾後妳就能幫他蓋章囉</p>`}
+                    </div>
+                </div>`;
+        }
+
+        // --- 歷史紀錄 ---
         const hist = Object.values(globalData.history || {}).sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
-        histDiv.innerHTML = hist.map(h => `<div class="history-item"><small>${h.date} · ${userMap[h.owner].icon}${h.owner}</small><br>${h.items.map(i => (i.d?'✅':'❌')+i.t).join(' | ')}</div>`).join('');
+        document.getElementById('history-list').innerHTML = hist.map(h => `<div class="history-item"><small>${h.date} · ${userMap[h.owner].icon}${h.owner}</small><br>${h.items.map(i => (i.d?'✅':'❌')+i.t).join(' | ')}</div>`).join('');
     }
 </script>
 </body>
