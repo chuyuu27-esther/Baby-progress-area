@@ -47,8 +47,19 @@
         }
         @keyframes stampIn { 0% { transform: scale(3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
         
+        /* 歷史紀錄刪除鈕樣式 */
         .history-section { width: 100%; max-width: 420px; margin-top: 20px; }
-        .history-item { background: white; padding: 12px; margin-bottom: 10px; border-radius: 15px; border-left: 5px solid var(--primary-pink); font-size: 0.9rem; }
+        .history-item { 
+            background: white; padding: 12px; margin-bottom: 10px; border-radius: 15px; 
+            border-left: 5px solid var(--primary-pink); font-size: 0.9rem; position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+        }
+        .del-btn {
+            position: absolute; right: 10px; top: 10px; background: none; border: none;
+            color: #ddd; cursor: pointer; font-size: 1rem; transition: 0.2s;
+        }
+        .del-btn:hover { color: var(--stamp-color); }
+
         .status-msg { text-align: center; color: var(--deep-pink); padding: 10px; font-size: 0.9rem; }
         .expired-tag { color: #aaa; font-size: 0.7rem; margin-left: 5px; border: 1px solid #ddd; padding: 1px 4px; border-radius: 4px; }
     </style>
@@ -57,7 +68,7 @@
 
 <script>
     const secret = "0926"; 
-    while (prompt("請輸入我們的秘密代號 🤫") !== secret) { alert("代號不對喔，再好好想一下啊！🐶🐰"); }
+    while (prompt("請輸入我們的秘密代號 🤫") !== secret) { alert("代號不對喔，再好好認真想一下啊！🐶🐰"); }
 </script>
 
 <h2>今天也要一起進步 🌸</h2>
@@ -80,8 +91,9 @@
 </div>
 
 <script type="module">
+    // 引入 remove 功能
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, set, onValue, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, set, onValue, push, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyD_SlAnOPvjuiq69qeDoRiqGp3_yu7nsiA",
@@ -102,11 +114,8 @@
     let globalData = { active: { '小寶': null, '大寶': null }, history: {} };
     const userMap = { '小寶': { icon: '🐶', partner: '大寶' }, '大寶': { icon: '🐰', partner: '小寶' } };
 
-    // --- 核心改動：以凌晨 4 點為分界線的日期計算 ---
     function getEffectiveTodayStr() {
         const now = new Date();
-        // 將當前時間減去 4 小時
-        // 範例：若現在是 4/16 03:00，減去 4 小時後會變成 4/15 23:00
         now.setHours(now.getHours() - 4);
         return now.toLocaleDateString('zh-TW', {month:'short', day:'numeric'});
     }
@@ -124,10 +133,9 @@
         globalData.history = (d && d.history) ? d.history : {};
         
         let needsUpdate = false;
-        const effectiveToday = getEffectiveTodayStr(); // 取得目前的「生效日期」
+        const effectiveToday = getEffectiveTodayStr();
         
         ['小寶', '大寶'].forEach(user => {
-            // 如果儲存的目標日期與現在計算出的生效日期不同，代表該過期了
             if (rawActive[user] && rawActive[user].date !== effectiveToday) {
                 const expiredTask = { ...rawActive[user], status: 'expired', timestamp: serverTimestamp() };
                 push(ref(db, 'coupleDataV4/history'), expiredTask);
@@ -137,7 +145,6 @@
         });
 
         globalData.active = rawActive;
-        
         if (needsUpdate) {
             set(dbRef, globalData);
         } else {
@@ -148,11 +155,8 @@
     window.submitGoals = () => {
         const goals = [document.getElementById('g1').value, document.getElementById('g2').value, document.getElementById('g3').value];
         if(goals.some(g => !g)) return alert("要填滿三格喔！✨");
-        
         globalData.active[currentUser] = {
-            owner: currentUser,
-            date: getEffectiveTodayStr(), // 存入當前的「生效日期」
-            status: 'pending',
+            owner: currentUser, date: getEffectiveTodayStr(), status: 'pending',
             items: goals.map(g => ({t: g, d: false}))
         };
         set(dbRef, globalData);
@@ -174,7 +178,6 @@
         const partner = userMap[currentUser].partner;
         const stamp = document.getElementById('flower-stamp-partner');
         if(stamp) stamp.style.display = 'flex';
-        
         setTimeout(() => {
             const finished = { ...globalData.active[partner], status: 'completed', timestamp: serverTimestamp() };
             push(ref(db, 'coupleDataV4/history'), finished);
@@ -184,11 +187,22 @@
         }, 1000);
     };
 
+    // --- 核心改動：刪除歷史紀錄 ---
+    window.deleteHistory = (key) => {
+        if (confirm("親愛的，確定要刪除這筆紀錄嗎？🗑️")) {
+            const itemRef = ref(db, `coupleDataV4/history/${key}`);
+            remove(itemRef).then(() => {
+                alert("刪除成功囉！✨");
+            });
+        }
+    };
+
     function render() {
         const mySection = document.getElementById('my-section');
         const partnerSection = document.getElementById('partner-section');
         const partner = userMap[currentUser].partner;
 
+        // 渲染我的區域 (同前)
         const myActive = globalData.active[currentUser];
         if (!myActive) {
             mySection.innerHTML = `
@@ -212,6 +226,7 @@
                 </div>`;
         }
 
+        // 渲染對方的區域 (同前)
         const pActive = globalData.active[partner];
         if (!pActive) {
             partnerSection.innerHTML = `<p class="status-msg">🍵 ${partner} ${userMap[partner].icon} 還沒設定目標...</p>`;
@@ -226,18 +241,21 @@
                             <span style="${it.d ? 'text-decoration:line-through;color:#bbb' : ''}">${it.t}</span>
                         </div>`).join('')}
                     <div style="margin-top:15px;">
-                        ${pActive.status === 'reviewing' ? `<button class="main-btn" style="background:#ff6b81" onclick="approvePartner()">💮 幫 ${partner} 蓋章</button>` : `<p class="status-msg">寶寶奮鬥中</p>`}
+                        ${pActive.status === 'reviewing' ? `<button class="main-btn" style="background:#ff6b81" onclick="approvePartner()">💮 幫 ${partner} 蓋章</button>` : `<p class="status-msg">寶寶加油中！</p>`}
                     </div>
                 </div>`;
         }
 
-        const hist = Object.values(globalData.history || {}).sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
-        document.getElementById('history-list').innerHTML = hist.map(h => {
+        // --- 核心改動：渲染歷史紀錄（帶有刪除鈕） ---
+        const histEntries = Object.entries(globalData.history || {}).sort(([,a], [,b]) => (b.timestamp||0) - (a.timestamp||0));
+        document.getElementById('history-list').innerHTML = histEntries.map(([key, h]) => {
             const isExpired = h.status === 'expired';
-            return `<div class="history-item">
-                <small>${h.date} · ${userMap[h.owner].icon}${h.owner} ${isExpired ? '<span class="expired-tag">未完成</span>' : ''}</small><br>
-                ${h.items.map(i => (i.d?'✅':'❌')+i.t).join(' | ')}
-            </div>`;
+            return `
+                <div class="history-item">
+                    <button class="del-btn" onclick="deleteHistory('${key}')">🗑️</button>
+                    <small>${h.date} · ${userMap[h.owner].icon}${h.owner} ${isExpired ? '<span class="expired-tag">未完成</span>' : ''}</small><br>
+                    ${h.items.map(i => (i.d?'✅':'❌')+i.t).join(' | ')}
+                </div>`;
         }).join('');
     }
 </script>
