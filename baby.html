@@ -6,146 +6,56 @@
     <title>今天也要一起進步 🌸</title>
     <style>
         :root {
-            --bg-color: #fdfcf5;        /* 溫暖淡米黃 */
-            --primary-pink: #ffb7c5;   /* 櫻花粉 */
-            --deep-pink: #e08e9b;      /* 乾燥玫瑰粉 */
-            --accent-pink: #ffebee;    /* 極淡粉 */
-            --stamp-color: #ff6b81;    /* 印章紅 */
-            --text-color: #5d4037;     /* 深棕色 */
+            --bg-color: #fdfcf5; --primary-pink: #ffb7c5; --deep-pink: #e08e9b;
+            --accent-pink: #ffebee; --stamp-color: #ff6b81; --text-color: #5d4037;
             --shadow: 0 10px 25px rgba(224, 142, 155, 0.15);
         }
-
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
         body {
-            font-family: 'Hiragino Maru Gothic ProN', 'Chalkboard SE', 'Microsoft JhengHei', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            margin: 0;
-            min-height: 100vh;
+            font-family: 'Hiragino Maru Gothic ProN', sans-serif;
+            background-color: var(--bg-color); color: var(--text-color);
+            display: flex; flex-direction: column; align-items: center;
+            padding: 20px; margin: 0; min-height: 100vh;
         }
-
         h2 { color: var(--deep-pink); font-weight: 600; margin-bottom: 10px; }
         .subtitle { font-size: 0.9rem; color: #a08080; margin-bottom: 20px; }
-
         .container {
-            width: 100%;
-            max-width: 420px;
-            background: white;
-            padding: 30px 25px;
-            border-radius: 30px;
-            box-shadow: var(--shadow);
-            border: 2px solid var(--accent-pink);
+            width: 100%; max-width: 420px; background: white;
+            padding: 30px 25px; border-radius: 30px;
+            box-shadow: var(--shadow); border: 2px solid var(--accent-pink);
         }
-
-        .role-switcher {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
-            background: var(--accent-pink);
-            padding: 8px;
-            border-radius: 50px;
-        }
-
-        .role-btn {
-            flex: 1;
-            border: none;
-            padding: 12px;
-            border-radius: 50px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            background: transparent;
-            color: var(--deep-pink);
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-        }
-
-        .role-btn.active {
-            background: var(--primary-pink);
-            color: white;
-            box-shadow: 0 4px 10px rgba(255, 183, 197, 0.5);
-        }
-
-        .input-group h3 { text-align: center; margin-top: 0; color: var(--deep-pink); }
-        input[type="text"] {
-            width: 100%;
-            padding: 15px;
-            margin-bottom: 12px;
-            border: 2px solid var(--accent-pink);
-            border-radius: 15px;
-            font-size: 1rem;
-            transition: 0.3s;
-        }
-        input[type="text"]:focus { outline: none; border-color: var(--primary-pink); background-color: #fffafb; }
-
-        .main-btn {
-            width: 100%;
-            background: var(--primary-pink);
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 15px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(255, 183, 197, 0.4);
-        }
-
+        .role-switcher { display: flex; gap: 15px; margin-bottom: 25px; background: var(--accent-pink); padding: 8px; border-radius: 50px; }
+        .role-btn { flex: 1; border: none; padding: 12px; border-radius: 50px; cursor: pointer; color: var(--deep-pink); background: transparent; transition: 0.3s; }
+        .role-btn.active { background: var(--primary-pink); color: white; box-shadow: 0 4px 10px rgba(255, 183, 197, 0.5); }
+        .input-group h3 { text-align: center; color: var(--deep-pink); }
+        input[type="text"] { width: 100%; padding: 15px; margin-bottom: 12px; border: 2px solid var(--accent-pink); border-radius: 15px; }
+        .main-btn { width: 100%; background: var(--primary-pink); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; cursor: pointer; }
         .goal-card { position: relative; border: 2px solid var(--accent-pink); border-radius: 20px; padding: 20px; background: #fffafb; }
         .goal-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px dashed var(--accent-pink); }
-
-        /* 愛心勾選框 */
-        input[type="checkbox"] {
-            appearance: none; -webkit-appearance: none;
-            width: 24px; height: 24px;
-            border: 2px solid var(--primary-pink);
-            border-radius: 8px;
-            background: white;
-            cursor: pointer;
-            position: relative;
-        }
+        input[type="checkbox"] { appearance: none; width: 24px; height: 24px; border: 2px solid var(--primary-pink); border-radius: 8px; position: relative; cursor: pointer; }
         input[type="checkbox"]:checked { background-color: var(--primary-pink); }
         input[type="checkbox"]:checked::after { content: '❤'; position: absolute; color: white; font-size: 14px; top: 2px; left: 4px; }
-
-        /* 🌸 花花印章設計 */
         .stamp {
-            position: absolute;
-            right: -5px;
-            top: -20px;
-            width: 90px;
-            height: 90px;
-            border: 3px double var(--stamp-color);
-            color: var(--stamp-color);
-            border-radius: 50%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            background: rgba(255, 255, 255, 0.9);
-            transform: rotate(15deg);
-            z-index: 10;
-            display: none;
+            position: absolute; right: -5px; top: -20px; width: 90px; height: 90px;
+            border: 3px double var(--stamp-color); color: var(--stamp-color); border-radius: 50%;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(255, 255, 255, 0.9); transform: rotate(15deg); z-index: 10;
             animation: stampIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .stamp span { font-size: 0.8rem; }
-        .stamp i { font-style: normal; font-size: 1.4rem; }
-
-        @keyframes stampIn { 0% { transform: rotate(0deg) scale(3); opacity: 0; } 100% { transform: rotate(15deg) scale(1); opacity: 1; } }
-
+        @keyframes stampIn { 0% { transform: scale(3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
         .history-section { width: 100%; max-width: 420px; margin-top: 30px; }
         .history-item { background: white; padding: 15px; margin-bottom: 12px; border-radius: 20px; border-left: 6px solid var(--primary-pink); box-shadow: var(--shadow); }
         .status-msg { text-align: center; color: var(--deep-pink); padding: 20px; }
     </style>
 </head>
 <body>
+
+<script>
+    const secret = "0926"; // 👈 這裡改成妳們的密碼
+    while (prompt("請輸入我們的秘密代號 🤫") !== secret) {
+        alert("代號不對喔，寶貝再想一下！🐶🐰");
+    }
+</script>
 
 <h2>今天也要一起進步 🌸</h2>
 <div class="subtitle">小寶 🐶 & 大寶 🐰 的秘密基地</div>
@@ -155,16 +65,10 @@
         <button id="btnA" class="role-btn active" onclick="setRole('小寶')">小寶 🐶</button>
         <button id="btnB" class="role-btn" onclick="setRole('大寶')">大寶 🐰</button>
     </div>
-
-    <div id="app-content">
-        <div class="status-msg">
-            🌸 連線雲端中...<br>
-            <small>(如果等太久，請檢查 Firebase Config 是否填寫正確喔！)</small>
-        </div>
-    </div>
+    <div id="app-content"><div class="status-msg">🌸 連線雲端中...</div></div>
 </div>
 
-<div class="history-section" id="history-container">
+<div class="history-section">
     <h3>📜 我們的成長足跡</h3>
     <div id="history-list"></div>
 </div>
@@ -173,12 +77,11 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set, onValue, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    // ⚠️ 請在這裡貼上妳的 Firebase 設定 ⚠️
+    // ⚠️ 這裡已修正語法，請把裡面的數值填對 ⚠️
     const firebaseConfig = {
-      const firebaseConfig = {
         apiKey: "AIzaSyD_SlAnOPvjuiq69qeDoRiqGp3_yu7nsiA",
         authDomain: "baby-progress-area.firebaseapp.com",
-        databaseURL: "https://chuyuu27-esther.github.io/Baby-progress-area/baby", // 👈 這裡要填妳資料庫頁面最上方那串 https 開頭的網址
+        databaseURL: "https://baby-progress-area-default-rtdb.firebaseio.com/", // 👈 這裡一定要填 Firebase 的網址！
         projectId: "baby-progress-area",
         storageBucket: "baby-progress-area.firebasestorage.app",
         messagingSenderId: "837749770988",
@@ -186,16 +89,10 @@
         measurementId: "G-911HS8D5FS"
     };
 
-    // 初始化
-    let db;
-    try {
-        const app = initializeApp(firebaseConfig);
-        db = getDatabase(app);
-    } catch (e) {
-        console.error("Firebase 初始化失敗，請檢查 Config");
-    }
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const dbRef = ref(db, 'coupleDataV3');
 
-    const dbRef = ref(db, 'coupleDataV3'); 
     let currentUser = '小寶';
     let globalData = { active: null, history: {} };
     const userMap = { '小寶': { icon: '🐶' }, '大寶': { icon: '🐰' } };
@@ -208,19 +105,13 @@
     };
 
     onValue(dbRef, (snapshot) => {
-        const data = snapshot.val();
-        globalData = data || { active: null, history: {} };
+        globalData = snapshot.val() || { active: null, history: {} };
         render();
     });
 
     window.submitGoals = () => {
-        const goals = [
-            document.getElementById('g1').value,
-            document.getElementById('g2').value,
-            document.getElementById('g3').value
-        ];
+        const goals = [document.getElementById('g1').value, document.getElementById('g2').value, document.getElementById('g3').value];
         if(goals.some(g => !g)) return alert("親愛的，目標要填滿三格喔！✨");
-
         globalData.active = {
             owner: currentUser,
             date: new Date().toLocaleDateString('zh-TW', {month:'short', day:'numeric'}),
@@ -231,7 +122,7 @@
     };
 
     window.toggleCheck = (idx) => {
-        if (globalData.active.owner !== currentUser || globalData.active.status !== 'pending') return;
+        if (!globalData.active || globalData.active.owner !== currentUser || globalData.active.status !== 'pending') return;
         globalData.active.items[idx].d = !globalData.active.items[idx].d;
         set(dbRef, globalData);
     };
@@ -243,12 +134,10 @@
     };
 
     window.approve = () => {
-        // 顯示花花印章動畫
         document.getElementById('flower-stamp').style.display = 'flex';
-        
         setTimeout(() => {
-            const finishedTask = { ...globalData.active, status: 'completed', timestamp: serverTimestamp() };
-            push(ref(db, 'coupleDataV3/history'), finishedTask);
+            const finished = { ...globalData.active, status: 'completed', timestamp: serverTimestamp() };
+            push(ref(db, 'coupleDataV3/history'), finished);
             globalData.active = null;
             set(dbRef, globalData);
             alert("🌸 蓋章成功！今天的你也超棒！");
@@ -258,49 +147,28 @@
     function render() {
         const content = document.getElementById('app-content');
         const histDiv = document.getElementById('history-list');
-
         if (!globalData.active) {
-            content.innerHTML = `
-                <div class="input-group">
-                    <h3>✍ 設定今日進步目標</h3>
-                    <input type="text" id="g1" placeholder="第一件好事...">
-                    <input type="text" id="g2" placeholder="第二件好事...">
-                    <input type="text" id="g3" placeholder="第三件好事...">
-                    <button class="main-btn" onclick="submitGoals()">開始進步的一天 ✨</button>
-                </div>`;
+            content.innerHTML = `<h3>✍ 設定今日目標</h3>
+                <input type="text" id="g1" placeholder="第一件好事..."><input type="text" id="g2" placeholder="第二件好事..."><input type="text" id="g3" placeholder="第三件好事...">
+                <button class="main-btn" onclick="submitGoals()">開始進步的一天 ✨</button>`;
         } else {
             const isOwner = globalData.active.owner === currentUser;
             const status = globalData.active.status;
-            
-            content.innerHTML = `
-                <div class="goal-card">
-                    <div id="flower-stamp" class="stamp">
-                        <i>🌸</i>
-                        <span>已完成</span>
-                    </div>
-                    <h4>${userMap[globalData.active.owner].icon}${globalData.active.owner} 的任務</h4>
-                    ${globalData.active.items.map((it, i) => `
-                        <div class="goal-item">
-                            <input type="checkbox" ${it.d ? 'checked' : ''} ${(!isOwner || status!=='pending') ? 'disabled' : ''} onclick="toggleCheck(${i})">
-                            <span style="${it.d ? 'text-decoration:line-through;color:#bbb' : ''}">${it.t}</span>
-                        </div>
-                    `).join('')}
-                    <div style="margin-top:20px;">
-                        ${isOwner ? 
-                            (status === 'pending' ? '<button class="main-btn" onclick="requestReview()">完成啦！申請蓋章</button>' : '<p class="status-msg">⏳ 等待蓋章中...</p>') :
-                            (status === 'reviewing' ? '<button class="main-btn" style="background:#ff6b81" onclick="approve()">💮 給你花花印章</button>' : '<p class="status-msg">🍵 他正在努力中...</p>')
-                        }
-                    </div>
-                </div>`;
+            content.innerHTML = `<div class="goal-card">
+                <div id="flower-stamp" class="stamp"><i>🌸</i><span>已完成</span></div>
+                <h4>${userMap[globalData.active.owner].icon}${globalData.active.owner} 的任務</h4>
+                ${globalData.active.items.map((it, i) => `
+                    <div class="goal-item">
+                        <input type="checkbox" ${it.d ? 'checked' : ''} ${(!isOwner || status!=='pending') ? 'disabled' : ''} onclick="toggleCheck(${i})">
+                        <span style="${it.d ? 'text-decoration:line-through;color:#bbb' : ''}">${it.t}</span>
+                    </div>`).join('')}
+                <div style="margin-top:20px;">
+                    ${isOwner ? (status === 'pending' ? '<button class="main-btn" onclick="requestReview()">申請蓋章 ✨</button>' : '<p class="status-msg">等待蓋章中...</p>') :
+                    (status === 'reviewing' ? '<button class="main-btn" style="background:#ff6b81" onclick="approve()">💮 給你花花印章</button>' : '<p class="status-msg">他正在努力中...</p>')}
+                </div></div>`;
         }
-
-        const historyArray = Object.values(globalData.history || {}).sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
-        histDiv.innerHTML = historyArray.map(h => `
-            <div class="history-item">
-                <small style="color:var(--deep-pink)">${h.date} · ${userMap[h.owner].icon}${h.owner}</small><br>
-                ${h.items.map(i => (i.d ? '✅' : '❌') + i.t).join(' | ')}
-            </div>
-        `).join('');
+        const hist = Object.values(globalData.history || {}).sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+        histDiv.innerHTML = hist.map(h => `<div class="history-item"><small>${h.date} · ${userMap[h.owner].icon}${h.owner}</small><br>${h.items.map(i => (i.d?'✅':'❌')+i.t).join(' | ')}</div>`).join('');
     }
 </script>
 </body>
