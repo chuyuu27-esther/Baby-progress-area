@@ -57,7 +57,7 @@
 
 <script>
     const secret = "0926"; 
-    while (prompt("請輸入我們的秘密代號 🤫") !== secret) { alert("代號不對喔，寶貝再想一下！🐶🐰"); }
+    while (prompt("請輸入我們的秘密代號 🤫") !== secret) { alert("代號不對喔，再好好想一下啊！🐶🐰"); }
 </script>
 
 <h2>今天也要一起進步 🌸</h2>
@@ -207,7 +207,7 @@
                             <span style="${it.d ? 'text-decoration:line-through;color:#bbb' : ''}">${it.t}</span>
                         </div>`).join('')}
                     <div style="margin-top:15px;">
-                        ${myActive.status === 'pending' ? '<button class="main-btn" onclick="requestReview()">做完了！請對方蓋章</button>' : '<p class="status-msg">⏳ 等待對方蓋章中...</p>'}
+                        ${myActive.status === 'pending' ? '<button class="main-btn" onclick="requestReview()">做完了！請寶寶蓋章</button>' : '<p class="status-msg">⏳ 等待對方蓋章中...</p>'}
                     </div>
                 </div>`;
         }
@@ -226,7 +226,7 @@
                             <span style="${it.d ? 'text-decoration:line-through;color:#bbb' : ''}">${it.t}</span>
                         </div>`).join('')}
                     <div style="margin-top:15px;">
-                        ${pActive.status === 'reviewing' ? `<button class="main-btn" style="background:#ff6b81" onclick="approvePartner()">💮 幫 ${partner} 蓋章</button>` : `<p class="status-msg">加油中！全部打勾後妳就能幫他蓋章囉</p>`}
+                        ${pActive.status === 'reviewing' ? `<button class="main-btn" style="background:#ff6b81" onclick="approvePartner()">💮 幫 ${partner} 蓋章</button>` : `<p class="status-msg">寶寶奮鬥中</p>`}
                     </div>
                 </div>`;
         }
