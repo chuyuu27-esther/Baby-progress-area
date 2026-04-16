@@ -33,7 +33,6 @@
         input[type="text"] { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid var(--accent-pink); border-radius: 12px; font-size: 1rem; outline: none; transition: 0.3s; }
         input[type="text"]:focus { border-color: var(--primary-pink); background: #fffafb; }
 
-        /* --- 核心改動：願望輸入框專屬樣式 --- */
         .wish-input {
             background-color: var(--wish-yellow) !important;
             border: 2px solid #ffe082 !important;
@@ -44,6 +43,7 @@
         .main-btn { width: 100%; background: var(--primary-pink); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; cursor: pointer; margin-top: 5px; }
         .edit-btn { background: none; border: 1px solid var(--primary-pink); color: var(--primary-pink); padding: 5px 12px; border-radius: 10px; font-size: 0.8rem; cursor: pointer; margin-top: 10px; align-self: center; }
 
+        /* 修正了點點 */
         .wish-box { background: var(--wish-yellow); border: 2px dashed var(--bg-color); border-radius: 15px; padding: 10px; margin: 10px 0; font-size: 0.9rem; color: #b8860b; text-align: center; }
 
         .goal-card { position: relative; border: 2px solid var(--accent-pink); border-radius: 20px; padding: 15px; background: #fffafb; margin-bottom: 20px; overflow: hidden; display: flex; flex-direction: column; }
@@ -176,6 +176,7 @@
         const d = snapshot.val() || {};
         const today = getTodayStr();
         
+        // --- 慶祝視窗邏輯：只有自己完成時才看得到 ---
         if (d.active && d.active[currentUser] && d.active[currentUser].status === 'completed') {
             document.getElementById('celebration-overlay').style.display = 'flex';
         }
@@ -183,6 +184,7 @@
         let rawActive = d.active || { '小寶': null, '大寶': null };
         let rawTomorrow = d.tomorrow || { '小寶': null, '大寶': null };
         
+        // 凌晨 4 點收割 (針對未結案的任務)
         ['小寶', '大寶'].forEach(u => {
             if (rawActive[u] && rawActive[u].date !== today) {
                 const expired = { ...rawActive[u], timestamp: serverTimestamp() };
@@ -202,13 +204,9 @@
         render();
     });
 
+    // 領獎完立刻清空，讓今日目標可以重複出現
     window.closeCelebration = () => {
         document.getElementById('celebration-overlay').style.display = 'none';
-        const currentTask = globalData.active[currentUser];
-        if (!currentTask) return;
-        const finished = { ...currentTask, timestamp: serverTimestamp() };
-        delete finished.wish;
-        push(ref(db, 'coupleDataV6/history'), finished);
         set(ref(db, `coupleDataV6/active/${currentUser}`), null);
     };
 
@@ -266,19 +264,26 @@
         set(ref(db, `coupleDataV6/active/${currentUser}`), globalData.active[currentUser]);
     };
 
+    // --- 核心改動：幫忙蓋章的人點下去，立刻送歷史紀錄 ---
     window.approvePartner = () => {
         const partner = userMap[currentUser].partner;
         const partnerData = globalData.active[partner];
         partnerData.status = 'completed'; 
+        
+        // 1. 即時推送到歷史紀錄 (帶章)
+        const finished = { ...partnerData, timestamp: serverTimestamp() };
+        delete finished.wish; // 願望不進歷史
+        push(ref(db, 'coupleDataV6/history'), finished);
+
+        // 2. 更新 active 資料庫觸發對方的慶祝
         set(ref(db, `coupleDataV6/active/${partner}`), partnerData);
     };
 
     window.sendMessage = () => {
         const input = document.getElementById('msg-input');
         if(!input.value.trim()) return;
-        const now = new Date();
         push(ref(db, 'coupleDataV6/messages'), {
-            sender: currentUser, text: input.value, time: now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0'), 
+            sender: currentUser, text: input.value, time: new Date().getHours() + ":" + new Date().getMinutes().toString().padStart(2, '0'), 
             date: getTodayStr(), timestamp: serverTimestamp()
         });
         input.value = '';
@@ -322,7 +327,7 @@
                     <h4>${partner} 的任務</h4>
                     ${pActive.wish ? `<div class="wish-box">🎁 對方的願望：${pActive.wish}</div>` : ''}
                     ${pActive.items.map(it => `<div class="goal-item"><input type="checkbox" ${it.d ? 'checked' : ''} disabled><span>${it.t}</span></div>`).join('')}
-                    ${pActive.status === 'completed' ? '<p class="status-msg" style="color:#4caf50; font-weight:bold;">完成啦！💮</p>' : (pActive.status === 'reviewing' ? `<button class="main-btn" style="background:#ff6b81" onclick="approvePartner()">💮 幫 ${partner} 蓋章</button>` : `<p class="status-msg">完成啦！</p>`)}
+                    ${pActive.status === 'completed' ? '<p class="status-msg" style="color:#4caf50; font-weight:bold; font-size:1.1rem;">✨ 完成啦！💮 ✨</p>' : (pActive.status === 'reviewing' ? `<button class="main-btn" style="background:#ff6b81" onclick="approvePartner()">💮 幫 ${partner} 蓋章</button>` : `<p class="status-msg">加油中！期待你的願望 🍭</p>`)}
                 </div>`;
         }
 
@@ -335,6 +340,7 @@
         document.getElementById('tomorrow-input-group').style.display = tm ? 'none' : 'block';
         document.getElementById('tomorrow-display').style.display = tm ? 'block' : 'none';
 
+        // 歷史紀錄
         const hist = Object.entries(globalData.history || {}).sort(([,a], [,b]) => (b.timestamp||0) - (a.timestamp||0));
         document.getElementById('history-list').innerHTML = hist.map(([key, h]) => `
             <div class="history-item">
