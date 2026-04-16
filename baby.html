@@ -301,15 +301,15 @@
 
         const pS = document.getElementById('partner-section');
         if (!pActive) {
-            pS.innerHTML = `<p class="status-msg">🍵 ${partner} 寶還在準備中⋯⋯</p>`;
+            pS.innerHTML = `<p class="status-msg">🍵 ${partner} 還在準備中⋯⋯</p>`;
         } else {
             pS.innerHTML = `
                 <div class="goal-card">
                     ${pActive.status === 'completed' ? '<div class="stamp">💮<span>棒棒</span></div>' : ''}
                     <h4>${partner} 的任務</h4>
-                    ${pActive.wish ? `<div class="wish-box">🎁 對方的願願：${pActive.wish}</div>` : ''}
+                    ${pActive.wish ? `<div class="wish-box">🎁 對方的願望：${pActive.wish}</div>` : ''}
                     ${pActive.items.map(it => `<div class="goal-item"><input type="checkbox" ${it.d ? 'checked' : ''} disabled><span>${it.t}</span></div>`).join('')}
-                    ${pActive.status === 'reviewing' ? `<button class="main-btn" style="background:#ff6b81" onclick="approvePartner()">💮 幫 ${partner} 蓋章</button>` : `<p class="status-msg">加油中！</p>`}
+                    ${pActive.status === 'reviewing' ? `<button class="main-btn" style="background:#ff6b81" onclick="approvePartner()">💮 幫 ${partner} 蓋章</button>` : `<p class="status-msg">完成啦！</p>`}
                 </div>`;
         }
 
