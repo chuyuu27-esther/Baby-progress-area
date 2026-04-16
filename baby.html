@@ -8,7 +8,7 @@
         :root {
             --bg-color: #fdfcf5; --primary-pink: #ffb7c5; --deep-pink: #e08e9b;
             --accent-pink: #ffebee; --stamp-color: #ff6b81; --text-color: #5d4037;
-            --tomorrow-bg: #f5fff5; --tomorrow-border: #e2f3e2; /* 超淺馬卡龍綠 */
+            --tomorrow-bg: #f5fff5; --tomorrow-border: #e2f3e2; 
             --shadow: 0 10px 25px rgba(224, 142, 155, 0.15);
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -33,7 +33,8 @@
         .main-btn { width: 100%; background: var(--primary-pink); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; cursor: pointer; margin-top: 5px; }
         .edit-btn { background: none; border: 1px solid var(--primary-pink); color: var(--primary-pink); padding: 5px 12px; border-radius: 10px; font-size: 0.8rem; cursor: pointer; margin-top: 10px; align-self: center; }
 
-        ..wish-box { background: #fff9e6; border: 2px dashed var(--bg-color); border-radius: 15px; padding: 10px; margin: 10px 0; font-size: 0.9rem; color: #b8860b; text-align: center; }
+        /* 修正了這裡的雙點點 */
+        .wish-box { background: #fff9e6; border: 2px dashed var(--bg-color); border-radius: 15px; padding: 10px; margin: 10px 0; font-size: 0.9rem; color: #b8860b; text-align: center; }
 
         .goal-card { position: relative; border: 2px solid var(--accent-pink); border-radius: 20px; padding: 15px; background: #fffafb; margin-bottom: 20px; overflow: hidden; display: flex; flex-direction: column; }
         .goal-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px dashed var(--accent-pink); }
@@ -131,7 +132,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, set, onValue, push, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, set, onValue, push, remove, serverTimestamp, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyD_SlAnOPvjuiq69qeDoRiqGp3_yu7nsiA",
@@ -166,23 +167,21 @@
         const d = snapshot.val() || {};
         const today = getTodayStr();
         
-        // 慶祝視窗邏輯
-        if (d.active && d.active[currentUser] && d.active[currentUser].status === 'completed' && !sessionStorage.getItem('celebrated_'+d.active[currentUser].date)) {
+        // 慶祝視窗邏輯：如果狀態剛變成 completed
+        if (d.active && d.active[currentUser] && d.active[currentUser].status === 'completed') {
             document.getElementById('celebration-overlay').style.display = 'flex';
         }
 
         let rawActive = d.active || { '小寶': null, '大寶': null };
         let rawTomorrow = d.tomorrow || { '小寶': null, '大寶': null };
         
-        // --- 核心邏輯：凌晨 4 點的收割與自動接軌 ---
+        // 凌晨 4 點的過期收割 (處理未完成的)
         ['小寶', '大寶'].forEach(u => {
             if (rawActive[u] && rawActive[u].date !== today) {
-                // 1. 搬移到歷史紀錄 (只要是 completed 就帶章)
                 const expired = { ...rawActive[u], timestamp: serverTimestamp() };
-                delete expired.wish; // 願望不存入歷史
+                delete expired.wish;
                 push(ref(db, 'coupleDataV6/history'), expired);
                 
-                // 2. 檢查有無明日計畫並匯入
                 if (rawTomorrow[u]) {
                     set(ref(db, `coupleDataV6/active/${u}`), { ...rawTomorrow[u], date: today, status: 'pending' });
                     set(ref(db, `coupleDataV6/tomorrow/${u}`), null);
@@ -196,9 +195,19 @@
         render();
     });
 
+    // --- 核心改動：點擊「收下獎勵」立刻存檔並清空，實現一天多重任務 ---
     window.closeCelebration = () => {
         document.getElementById('celebration-overlay').style.display = 'none';
-        sessionStorage.setItem('celebrated_'+getTodayStr(), 'true');
+        const currentTask = globalData.active[currentUser];
+        if (!currentTask) return;
+
+        // 1. 存入歷史紀錄 (帶章)
+        const finished = { ...currentTask, timestamp: serverTimestamp() };
+        delete finished.wish; // 願望不進歷史
+        push(ref(db, 'coupleDataV6/history'), finished);
+
+        // 2. 清空 active，讓輸入框重新出現
+        set(ref(db, `coupleDataV6/active/${currentUser}`), null);
     };
 
     window.submitGoals = () => {
@@ -222,7 +231,6 @@
                 document.getElementById('g-wish').value = wish;
             }, 100);
         });
-        sessionStorage.removeItem('celebrated_'+getTodayStr()); // 修改後重置慶祝標記
     };
 
     window.saveTomorrowPlan = () => {
@@ -263,9 +271,8 @@
     window.sendMessage = () => {
         const input = document.getElementById('msg-input');
         if(!input.value.trim()) return;
-        const now = new Date();
         push(ref(db, 'coupleDataV6/messages'), {
-            sender: currentUser, text: input.value, time: now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0'), 
+            sender: currentUser, text: input.value, time: new Date().getHours() + ":" + new Date().getMinutes().toString().padStart(2, '0'), 
             date: getTodayStr(), timestamp: serverTimestamp()
         });
         input.value = '';
@@ -284,7 +291,7 @@
                 <div class="input-group">
                     <h3 style="color:var(--deep-pink); text-align:center;">✍ 設定今日目標 (${getTodayStr()})</h3>
                     <input type="text" id="g1" placeholder="目標 1"><input type="text" id="g2" placeholder="目標 2"><input type="text" id="g3" placeholder="目標 3">
-                    <input type="text" id="g-wish" placeholder="🎁 完成獎勵小許願 (例如：一個大抱抱)">
+                    <input type="text" id="g-wish" placeholder="🎁 完成獎勵小許願">
                     <button class="main-btn" onclick="submitGoals()">開始努力！ ✨</button>
                 </div>`;
         } else {
@@ -309,7 +316,7 @@
                     <h4>${partner} 的任務</h4>
                     ${pActive.wish ? `<div class="wish-box">🎁 對方的願望：${pActive.wish}</div>` : ''}
                     ${pActive.items.map(it => `<div class="goal-item"><input type="checkbox" ${it.d ? 'checked' : ''} disabled><span>${it.t}</span></div>`).join('')}
-                    ${pActive.status === 'reviewing' ? `<button class="main-btn" style="background:#ff6b81" onclick="approvePartner()">💮 幫 ${partner} 蓋章</button>` : `<p class="status-msg">完成啦！</p>`}
+                    ${pActive.status === 'completed' ? '<p class="status-msg" style="color:#4caf50; font-weight:bold;">完成啦！💮</p>' : (pActive.status === 'reviewing' ? `<button class="main-btn" style="background:#ff6b81" onclick="approvePartner()">💮 幫 ${partner} 蓋章</button>` : `<p class="status-msg">加油中！</p>`)}
                 </div>`;
         }
 
@@ -326,7 +333,7 @@
         document.getElementById('history-list').innerHTML = hist.map(([key, h]) => `
             <div class="history-item">
                 <button class="del-btn" onclick="deleteHistory('${key}')">🗑️</button>
-                ${h.status === 'completed' ? '<div class="history-stamp">💮</div>' : ''}
+                <div class="history-stamp">💮</div>
                 <small>${h.date} · ${userMap[h.owner].icon}${h.owner}</small><br>
                 ${h.items.map(i => (i.d?'✅':'❌')+i.t).join(' | ')}
             </div>
