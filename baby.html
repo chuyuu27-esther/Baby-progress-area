@@ -105,7 +105,7 @@
 <div class="container" style="padding:15px; box-shadow:none; border:1px solid var(--accent-pink);">
     <div id="message-list" class="message-list"></div>
     <div style="display:flex; gap:8px;">
-        <input type="text" id="msg-input" placeholder="說點什麼...">
+        <input type="text" id="msg-input" placeholder="說點什麼⋯⋯">
         <button class="role-btn active" style="width:50px; flex:none; border-radius:15px;" onclick="sendMessage()">❤</button>
     </div>
 </div>
@@ -301,7 +301,7 @@
 
         const pS = document.getElementById('partner-section');
         if (!pActive) {
-            pS.innerHTML = `<p class="status-msg">🍵 ${partner} 寶寶還在準備中...</p>`;
+            pS.innerHTML = `<p class="status-msg">🍵 ${partner} 寶還在準備中⋯⋯</p>`;
         } else {
             pS.innerHTML = `
                 <div class="goal-card">
