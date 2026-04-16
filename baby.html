@@ -33,7 +33,7 @@
         .main-btn { width: 100%; background: var(--primary-pink); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; cursor: pointer; margin-top: 5px; }
         .edit-btn { background: none; border: 1px solid var(--primary-pink); color: var(--primary-pink); padding: 5px 12px; border-radius: 10px; font-size: 0.8rem; cursor: pointer; margin-top: 10px; align-self: center; }
 
-        .wish-box { background: #fff9e6; border: 1px dashed #ffd700; border-radius: 15px; padding: 10px; margin: 10px 0; font-size: 0.9rem; color: #b8860b; text-align: center; }
+        ..wish-box { background: #fff9e6; border: 2px dashed var(--bg-color); border-radius: 15px; padding: 10px; margin: 10px 0; font-size: 0.9rem; color: #b8860b; text-align: center; }
 
         .goal-card { position: relative; border: 2px solid var(--accent-pink); border-radius: 20px; padding: 15px; background: #fffafb; margin-bottom: 20px; overflow: hidden; display: flex; flex-direction: column; }
         .goal-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px dashed var(--accent-pink); }
@@ -78,14 +78,14 @@
 
 <div id="celebration-overlay">
     <div style="font-size: 80px;">💮</div>
-    <h1 style="color: var(--stamp-color);">超級無敵棒！</h1>
-    <p style="font-size: 1.2rem;">寶寶你做到了！<br>送你一個大大的印章 ❤</p>
+    <h1 style="color: var(--stamp-color);">世界最厲害的寶寶！</h1>
+    <p style="font-size: 1.2rem;">寶寶你做到了！<br>送你一個大大的ㄇㄨㄚˋ ❤</p>
     <button class="main-btn" style="width:150px; margin-top:20px;" onclick="closeCelebration()">收下獎勵！</button>
 </div>
 
 <script>
     const secret = "0926"; 
-    while (prompt("秘密代號 🤫") !== secret) { alert("不對唷！"); }
+    while (prompt("秘密代號 🤫") !== secret) { alert("再好好想想呀！"); }
 </script>
 
 <h2>今天也要一起進步 🌸</h2>
@@ -284,8 +284,8 @@
                 <div class="input-group">
                     <h3 style="color:var(--deep-pink); text-align:center;">✍ 設定今日目標 (${getTodayStr()})</h3>
                     <input type="text" id="g1" placeholder="目標 1"><input type="text" id="g2" placeholder="目標 2"><input type="text" id="g3" placeholder="目標 3">
-                    <input type="text" id="g-wish" placeholder="🎁 完成後的小許願 (例如：喝奶茶)">
-                    <button class="main-btn" onclick="submitGoals()">開始戰鬥！ ✨</button>
+                    <input type="text" id="g-wish" placeholder="🎁 完成獎勵小許願 (例如：一個大抱抱)">
+                    <button class="main-btn" onclick="submitGoals()">開始努力！ ✨</button>
                 </div>`;
         } else {
             myS.innerHTML = `
@@ -301,7 +301,7 @@
 
         const pS = document.getElementById('partner-section');
         if (!pActive) {
-            pS.innerHTML = `<p class="status-msg">🍵 ${partner} 還在準備中...</p>`;
+            pS.innerHTML = `<p class="status-msg">🍵 ${partner} 寶寶還在準備中...</p>`;
         } else {
             pS.innerHTML = `
                 <div class="goal-card">
