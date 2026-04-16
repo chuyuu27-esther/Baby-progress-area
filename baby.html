@@ -299,7 +299,7 @@
                 <div class="goal-card">
                     ${myActive.status === 'completed' ? '<div class="stamp">💮<span>棒棒</span></div>' : ''}
                     <h4>我的任務 (${myActive.date})</h4>
-                    ${myActive.wish ? `<div class="wish-box">✨ 達成獎勵：${myActive.wish}</div>` : ''}
+                    ${myActive.wish ? `<div class="wish-box">✨ 獎勵許願完成，會實現嗎？：${myActive.wish}</div>` : ''}
                     ${myActive.items.map((it, i) => `<div class="goal-item"><input type="checkbox" ${it.d ? 'checked' : ''} ${myActive.status!=='pending' ? 'disabled' : ''} onclick="toggleCheck(${i})"><span>${it.t}</span></div>`).join('')}
                     ${myActive.status === 'pending' ? '<button class="main-btn" onclick="requestReview()">完成！請寶寶蓋章</button>' : (myActive.status === 'reviewing' ? '<p class="status-msg">⏳ 等待寶寶蓋章中...</p>' : '<p class="status-msg" style="color:#4caf50; font-weight:bold;">🎉 任務已達成！</p>')}
                     <button class="edit-btn" onclick="modifyTodayGoal()">修改/增加任務</button>
