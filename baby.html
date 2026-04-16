@@ -9,6 +9,7 @@
             --bg-color: #fdfcf5; --primary-pink: #ffb7c5; --deep-pink: #e08e9b;
             --accent-pink: #ffebee; --stamp-color: #ff6b81; --text-color: #5d4037;
             --tomorrow-bg: #f5fff5; --tomorrow-border: #e2f3e2; 
+            --wish-yellow: #fff9e6; --wish-gold: #ffd700;
             --shadow: 0 10px 25px rgba(224, 142, 155, 0.15);
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -29,12 +30,21 @@
         .role-btn { flex: 1; border: none; padding: 10px; border-radius: 50px; cursor: pointer; color: var(--deep-pink); background: transparent; font-weight: bold; }
         .role-btn.active { background: var(--primary-pink); color: white; }
         
-        input[type="text"] { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid var(--accent-pink); border-radius: 12px; font-size: 1rem; outline: none; }
+        input[type="text"] { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid var(--accent-pink); border-radius: 12px; font-size: 1rem; outline: none; transition: 0.3s; }
+        input[type="text"]:focus { border-color: var(--primary-pink); background: #fffafb; }
+
+        /* --- 核心改動：願望輸入框專屬樣式 --- */
+        .wish-input {
+            background-color: var(--wish-yellow) !important;
+            border: 2px solid #ffe082 !important;
+            color: #b8860b !important;
+        }
+        .wish-input::placeholder { color: #d4b483; }
+
         .main-btn { width: 100%; background: var(--primary-pink); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; cursor: pointer; margin-top: 5px; }
         .edit-btn { background: none; border: 1px solid var(--primary-pink); color: var(--primary-pink); padding: 5px 12px; border-radius: 10px; font-size: 0.8rem; cursor: pointer; margin-top: 10px; align-self: center; }
 
-        /* 修正了這裡的雙點點 */
-        .wish-box { background: #fff9e6; border: 2px dashed var(--bg-color); border-radius: 15px; padding: 10px; margin: 10px 0; font-size: 0.9rem; color: #b8860b; text-align: center; }
+        .wish-box { background: var(--wish-yellow); border: 2px dashed var(--bg-color); border-radius: 15px; padding: 10px; margin: 10px 0; font-size: 0.9rem; color: #b8860b; text-align: center; }
 
         .goal-card { position: relative; border: 2px solid var(--accent-pink); border-radius: 20px; padding: 15px; background: #fffafb; margin-bottom: 20px; overflow: hidden; display: flex; flex-direction: column; }
         .goal-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px dashed var(--accent-pink); }
@@ -51,8 +61,7 @@
             border: 3px double var(--stamp-color); color: var(--stamp-color); border-radius: 50%;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             background: rgba(255, 255, 255, 0.8); transform: rotate(15deg); z-index: 10;
-            font-weight: bold; font-size: 0.8rem;
-            animation: stampIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-weight: bold; font-size: 0.8rem; animation: stampIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         @keyframes stampIn { 0% { transform: scale(3) rotate(0deg); opacity: 0; } 100% { transform: scale(1) rotate(15deg); opacity: 1; } }
         
@@ -70,8 +79,7 @@
         #celebration-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255, 255, 255, 0.95); z-index: 100;
-            display: none; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center;
+            display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center;
         }
     </style>
 </head>
@@ -117,10 +125,11 @@
         <input type="text" id="t1" placeholder="明日計畫 1">
         <input type="text" id="t2" placeholder="明日計畫 2">
         <input type="text" id="t3" placeholder="明日計畫 3">
+        <input type="text" id="t-wish" class="wish-input" placeholder="🎁 明日的獎勵小許願">
         <button class="main-btn" style="background:#a5d6a7" onclick="saveTomorrowPlan()">儲存明日計畫 ✨</button>
     </div>
     <div id="tomorrow-display" style="display:none; text-align:center;">
-        <p style="color:#4caf50; font-weight:bold;">明日計畫已備妥 🚀</p>
+        <p style="color:#4caf50; font-weight:bold;">明日計畫與願望已備妥 🚀</p>
         <button class="edit-btn" style="border-color:#a5d6a7; color:#4caf50; margin:0;" onclick="editTomorrow()">修改明日計畫</button>
     </div>
 </div>
@@ -132,7 +141,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, set, onValue, push, remove, serverTimestamp, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, set, onValue, push, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyD_SlAnOPvjuiq69qeDoRiqGp3_yu7nsiA",
@@ -167,7 +176,6 @@
         const d = snapshot.val() || {};
         const today = getTodayStr();
         
-        // 慶祝視窗邏輯：如果狀態剛變成 completed
         if (d.active && d.active[currentUser] && d.active[currentUser].status === 'completed') {
             document.getElementById('celebration-overlay').style.display = 'flex';
         }
@@ -175,7 +183,6 @@
         let rawActive = d.active || { '小寶': null, '大寶': null };
         let rawTomorrow = d.tomorrow || { '小寶': null, '大寶': null };
         
-        // 凌晨 4 點的過期收割 (處理未完成的)
         ['小寶', '大寶'].forEach(u => {
             if (rawActive[u] && rawActive[u].date !== today) {
                 const expired = { ...rawActive[u], timestamp: serverTimestamp() };
@@ -195,18 +202,13 @@
         render();
     });
 
-    // --- 核心改動：點擊「收下獎勵」立刻存檔並清空，實現一天多重任務 ---
     window.closeCelebration = () => {
         document.getElementById('celebration-overlay').style.display = 'none';
         const currentTask = globalData.active[currentUser];
         if (!currentTask) return;
-
-        // 1. 存入歷史紀錄 (帶章)
         const finished = { ...currentTask, timestamp: serverTimestamp() };
-        delete finished.wish; // 願望不進歷史
+        delete finished.wish;
         push(ref(db, 'coupleDataV6/history'), finished);
-
-        // 2. 清空 active，讓輸入框重新出現
         set(ref(db, `coupleDataV6/active/${currentUser}`), null);
     };
 
@@ -235,17 +237,20 @@
 
     window.saveTomorrowPlan = () => {
         const goals = [document.getElementById('t1').value, document.getElementById('t2').value, document.getElementById('t3').value].filter(g => g.trim());
+        const wish = document.getElementById('t-wish').value;
         if(goals.length === 0) return alert("明天也要有目標喔！");
         set(ref(db, `coupleDataV6/tomorrow/${currentUser}`), {
-            owner: currentUser, items: goals.map(g => ({t: g, d: false}))
+            owner: currentUser, items: goals.map(g => ({t: g, d: false})), wish: wish
         });
     };
 
     window.editTomorrow = () => {
         const tm = globalData.tomorrow[currentUser];
+        const wish = tm.wish || "";
         set(ref(db, `coupleDataV6/tomorrow/${currentUser}`), null);
         setTimeout(() => {
             tm.items.forEach((it, idx) => { if(document.getElementById(`t${idx+1}`)) document.getElementById(`t${idx+1}`).value = it.t; });
+            document.getElementById('t-wish').value = wish;
         }, 100);
     };
 
@@ -271,8 +276,9 @@
     window.sendMessage = () => {
         const input = document.getElementById('msg-input');
         if(!input.value.trim()) return;
+        const now = new Date();
         push(ref(db, 'coupleDataV6/messages'), {
-            sender: currentUser, text: input.value, time: new Date().getHours() + ":" + new Date().getMinutes().toString().padStart(2, '0'), 
+            sender: currentUser, text: input.value, time: now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0'), 
             date: getTodayStr(), timestamp: serverTimestamp()
         });
         input.value = '';
@@ -291,7 +297,7 @@
                 <div class="input-group">
                     <h3 style="color:var(--deep-pink); text-align:center;">✍ 設定今日目標 (${getTodayStr()})</h3>
                     <input type="text" id="g1" placeholder="目標 1"><input type="text" id="g2" placeholder="目標 2"><input type="text" id="g3" placeholder="目標 3">
-                    <input type="text" id="g-wish" placeholder="🎁 完成獎勵小許願">
+                    <input type="text" id="g-wish" class="wish-input" placeholder="🎁 完成獎勵小許願 (例如：大抱抱)">
                     <button class="main-btn" onclick="submitGoals()">開始努力！ ✨</button>
                 </div>`;
         } else {
@@ -299,7 +305,7 @@
                 <div class="goal-card">
                     ${myActive.status === 'completed' ? '<div class="stamp">💮<span>棒棒</span></div>' : ''}
                     <h4>我的任務 (${myActive.date})</h4>
-                    ${myActive.wish ? `<div class="wish-box">✨ 獎勵許願完成，會實現嗎？：${myActive.wish}</div>` : ''}
+                    ${myActive.wish ? `<div class="wish-box">✨ 達成獎勵：${myActive.wish}</div>` : ''}
                     ${myActive.items.map((it, i) => `<div class="goal-item"><input type="checkbox" ${it.d ? 'checked' : ''} ${myActive.status!=='pending' ? 'disabled' : ''} onclick="toggleCheck(${i})"><span>${it.t}</span></div>`).join('')}
                     ${myActive.status === 'pending' ? '<button class="main-btn" onclick="requestReview()">完成！請寶寶蓋章</button>' : (myActive.status === 'reviewing' ? '<p class="status-msg">⏳ 等待寶寶蓋章中...</p>' : '<p class="status-msg" style="color:#4caf50; font-weight:bold;">🎉 任務已達成！</p>')}
                     <button class="edit-btn" onclick="modifyTodayGoal()">修改/增加任務</button>
@@ -316,7 +322,7 @@
                     <h4>${partner} 的任務</h4>
                     ${pActive.wish ? `<div class="wish-box">🎁 對方的願望：${pActive.wish}</div>` : ''}
                     ${pActive.items.map(it => `<div class="goal-item"><input type="checkbox" ${it.d ? 'checked' : ''} disabled><span>${it.t}</span></div>`).join('')}
-                    ${pActive.status === 'completed' ? '<p class="status-msg" style="color:#4caf50; font-weight:bold;">完成啦！💮</p>' : (pActive.status === 'reviewing' ? `<button class="main-btn" style="background:#ff6b81" onclick="approvePartner()">💮 幫 ${partner} 蓋章</button>` : `<p class="status-msg">加油中！</p>`)}
+                    ${pActive.status === 'completed' ? '<p class="status-msg" style="color:#4caf50; font-weight:bold;">完成啦！💮</p>' : (pActive.status === 'reviewing' ? `<button class="main-btn" style="background:#ff6b81" onclick="approvePartner()">💮 幫 ${partner} 蓋章</button>` : `<p class="status-msg">完成啦！</p>`)}
                 </div>`;
         }
 
