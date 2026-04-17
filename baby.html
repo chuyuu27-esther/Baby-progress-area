@@ -340,7 +340,7 @@
                     <h4>${partner} 的任務</h4>
                     ${pActive.wish ? `<div class="wish-box">🎁 我的寶寶的願望：${pActive.wish}</div>` : ''}
                     ${pActive.items.map(it => `<div class="goal-item"><input type="checkbox" ${it.d ? 'checked' : ''} disabled><span>${it.t}</span></div>`).join('')}
-                    ${pActive.status === 'completed' ? '<p class="status-msg" style="color:#4caf50; font-weight:bold; font-size:1.1rem;">✨ 完成啦！💮 ✨</p>' : (pActive.status === 'reviewing' ? `<button class="main-btn" style="background:#ff6b81" onclick="approvePartner()">💮 幫 ${partner} 蓋章</button>` : `<p class="status-msg">加油中！期待你的願望 🍭</p>`)}
+                    ${pActive.status === 'completed' ? '<p class="status-msg" style="color:#4caf50; font-weight:bold; font-size:1.1rem;">✨ 完成啦！💮 ✨</p>' : (pActive.status === 'reviewing' ? `<button class="main-btn" style="background:#ff6b81" onclick="approvePartner()">💮 幫 ${partner} 蓋章</button>` : `<p class="status-msg">加油中！</p>`)}
                 </div>`;
         }
 
