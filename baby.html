@@ -30,20 +30,18 @@
         .role-btn { flex: 1; border: none; padding: 10px; border-radius: 50px; cursor: pointer; color: var(--deep-pink); background: transparent; font-weight: bold; }
         .role-btn.active { background: var(--primary-pink); color: white; }
         
-        input[type="text"] { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid var(--accent-pink); border-radius: 12px; font-size: 1rem; outline: none; transition: 0.3s; }
-        input[type="text"]:focus { border-color: var(--primary-pink); background: #fffafb; }
-
+        input[type="text"] { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid var(--accent-pink); border-radius: 12px; font-size: 1rem; outline: none; }
+        
+        /* 許願輸入框樣式 */
         .wish-input {
             background-color: var(--wish-yellow) !important;
-            border: 2px solid #ffe082 !important;
+            border: 2px dashed #ffe082 !important;
             color: #b8860b !important;
         }
-        .wish-input::placeholder { color: #d4b483; }
 
         .main-btn { width: 100%; background: var(--primary-pink); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; cursor: pointer; margin-top: 5px; }
         .edit-btn { background: none; border: 1px solid var(--primary-pink); color: var(--primary-pink); padding: 5px 12px; border-radius: 10px; font-size: 0.8rem; cursor: pointer; margin-top: 10px; align-self: center; }
 
-        /* 修正了點點 */
         .wish-box { background: var(--wish-yellow); border: 2px dashed var(--bg-color); border-radius: 15px; padding: 10px; margin: 10px 0; font-size: 0.9rem; color: #b8860b; text-align: center; }
 
         .goal-card { position: relative; border: 2px solid var(--accent-pink); border-radius: 20px; padding: 15px; background: #fffafb; margin-bottom: 20px; overflow: hidden; display: flex; flex-direction: column; }
@@ -153,7 +151,7 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const dbRef = ref(db, 'coupleDataV6');
+    const dbRef = ref(db, 'coupleDataV7'); // 升級到 V7 乾淨資料庫
 
     let currentUser = '小寶';
     let globalData = { active: {}, tomorrow: {}, messages: {}, history: {} };
@@ -176,7 +174,7 @@
         const d = snapshot.val() || {};
         const today = getTodayStr();
         
-        // --- 慶祝視窗邏輯：只有自己完成時才看得到 ---
+        // 慶祝視窗邏輯：只有自己完成時才看得到
         if (d.active && d.active[currentUser] && d.active[currentUser].status === 'completed') {
             document.getElementById('celebration-overlay').style.display = 'flex';
         }
@@ -184,37 +182,44 @@
         let rawActive = d.active || { '小寶': null, '大寶': null };
         let rawTomorrow = d.tomorrow || { '小寶': null, '大寶': null };
         
-        // 凌晨 4 點收割 (針對未結案的任務)
+        // --- 核心邏輯：凌晨 4 點收割與明日計畫轉移 ---
+        let hasChanges = false;
         ['小寶', '大寶'].forEach(u => {
             if (rawActive[u] && rawActive[u].date !== today) {
-                const expired = { ...rawActive[u], timestamp: serverTimestamp() };
-                delete expired.wish;
-                push(ref(db, 'coupleDataV6/history'), expired);
-                
-                if (rawTomorrow[u]) {
-                    set(ref(db, `coupleDataV6/active/${u}`), { ...rawTomorrow[u], date: today, status: 'pending' });
-                    set(ref(db, `coupleDataV6/tomorrow/${u}`), null);
-                } else {
-                    set(ref(db, `coupleDataV6/active/${u}`), null);
+                // 1. 如果沒完成的，搬移到歷史紀錄
+                if (rawActive[u].status !== 'completed') {
+                   const expired = { ...rawActive[u], timestamp: serverTimestamp() };
+                   delete expired.wish;
+                   push(ref(db, 'coupleDataV7/history'), expired);
                 }
+                
+                // 2. 檢查有無明日計畫並匯入今日
+                if (rawTomorrow[u]) {
+                    set(ref(db, `coupleDataV7/active/${u}`), { ...rawTomorrow[u], date: today, status: 'pending' });
+                    set(ref(db, `coupleDataV7/tomorrow/${u}`), null);
+                } else {
+                    set(ref(db, `coupleDataV7/active/${u}`), null);
+                }
+                hasChanges = true;
             }
         });
 
-        globalData = { active: rawActive, tomorrow: rawTomorrow, messages: d.messages || {}, history: d.history || {} };
-        render();
+        if (!hasChanges) {
+            globalData = { active: rawActive, tomorrow: rawTomorrow, messages: d.messages || {}, history: d.history || {} };
+            render();
+        }
     });
 
-    // 領獎完立刻清空，讓今日目標可以重複出現
     window.closeCelebration = () => {
         document.getElementById('celebration-overlay').style.display = 'none';
-        set(ref(db, `coupleDataV6/active/${currentUser}`), null);
+        set(ref(db, `coupleDataV7/active/${currentUser}`), null);
     };
 
     window.submitGoals = () => {
-        const goals = [document.getElementById('g1').value, document.getElementById('g2').value, document.getElementById('g3').value].filter(g => g.trim());
+        const goals = [document.getElementById('g1').value, document.getElementById('g2').value, document.getElementById('g3').value].filter(g => g && g.trim());
         const wish = document.getElementById('g-wish').value;
-        if(goals.length === 0) return alert("至少寫一個目標嘛~");
-        set(ref(db, `coupleDataV6/active/${currentUser}`), {
+        if(goals.length === 0) return alert("要寫下目標喔，寶寶！🌸");
+        set(ref(db, `coupleDataV7/active/${currentUser}`), {
             owner: currentUser, date: getTodayStr(), status: 'pending',
             items: goals.map(g => ({t: g, d: false})),
             wish: wish
@@ -223,79 +228,86 @@
 
     window.modifyTodayGoal = () => {
         const current = globalData.active[currentUser];
+        if(!current) return;
         const items = current.items.map(i => i.t);
         const wish = current.wish || "";
-        set(ref(db, `coupleDataV6/active/${currentUser}`), null).then(() => {
+        set(ref(db, `coupleDataV7/active/${currentUser}`), null).then(() => {
             setTimeout(() => {
                 items.forEach((t, i) => { if(document.getElementById('g'+(i+1))) document.getElementById('g'+(i+1)).value = t; });
                 document.getElementById('g-wish').value = wish;
-            }, 100);
+            }, 200);
         });
     };
 
     window.saveTomorrowPlan = () => {
-        const goals = [document.getElementById('t1').value, document.getElementById('t2').value, document.getElementById('t3').value].filter(g => g.trim());
+        const goals = [document.getElementById('t1').value, document.getElementById('t2').value, document.getElementById('t3').value].filter(g => g && g.trim());
         const wish = document.getElementById('t-wish').value;
-        if(goals.length === 0) return alert("明天也要有目標喔！");
-        set(ref(db, `coupleDataV6/tomorrow/${currentUser}`), {
+        if(goals.length === 0) return alert("明天也要有一點點計畫嘛！");
+        set(ref(db, `coupleDataV7/tomorrow/${currentUser}`), {
             owner: currentUser, items: goals.map(g => ({t: g, d: false})), wish: wish
         });
     };
 
     window.editTomorrow = () => {
         const tm = globalData.tomorrow[currentUser];
+        if(!tm) return;
+        const items = tm.items.map(i => i.t);
         const wish = tm.wish || "";
-        set(ref(db, `coupleDataV6/tomorrow/${currentUser}`), null);
-        setTimeout(() => {
-            tm.items.forEach((it, idx) => { if(document.getElementById(`t${idx+1}`)) document.getElementById(`t${idx+1}`).value = it.t; });
-            document.getElementById('t-wish').value = wish;
-        }, 100);
+        set(ref(db, `coupleDataV7/tomorrow/${currentUser}`), null).then(() => {
+            setTimeout(() => {
+                items.forEach((t, i) => { if(document.getElementById('t'+(i+1))) document.getElementById('t'+(i+1)).value = t; });
+                document.getElementById('t-wish').value = wish;
+            }, 200);
+        });
     };
 
     window.toggleCheck = (idx) => {
         const target = globalData.active[currentUser];
+        if(!target) return;
         target.items[idx].d = !target.items[idx].d;
-        set(ref(db, `coupleDataV6/active/${currentUser}`), target);
+        set(ref(db, `coupleDataV7/active/${currentUser}`), target);
     };
 
     window.requestReview = () => {
-        if (!globalData.active[currentUser].items.every(i => i.d)) return alert("還沒全部打勾喔！💪");
+        if (!globalData.active[currentUser].items.every(i => i.d)) return alert("全部打勾勾才能請寶寶蓋章喔！💪");
         globalData.active[currentUser].status = 'reviewing';
-        set(ref(db, `coupleDataV6/active/${currentUser}`), globalData.active[currentUser]);
+        set(ref(db, `coupleDataV7/active/${currentUser}`), globalData.active[currentUser]);
     };
 
-    // --- 核心改動：幫忙蓋章的人點下去，立刻送歷史紀錄 ---
     window.approvePartner = () => {
         const partner = userMap[currentUser].partner;
         const partnerData = globalData.active[partner];
+        if(!partnerData) return;
         partnerData.status = 'completed'; 
         
         // 1. 即時推送到歷史紀錄 (帶章)
         const finished = { ...partnerData, timestamp: serverTimestamp() };
-        delete finished.wish; // 願望不進歷史
-        push(ref(db, 'coupleDataV6/history'), finished);
+        delete finished.wish;
+        push(ref(db, 'coupleDataV7/history'), finished);
 
-        // 2. 更新 active 資料庫觸發對方的慶祝
-        set(ref(db, `coupleDataV6/active/${partner}`), partnerData);
+        // 2. 更新 active
+        set(ref(db, `coupleDataV7/active/${partner}`), partnerData);
     };
 
     window.sendMessage = () => {
         const input = document.getElementById('msg-input');
         if(!input.value.trim()) return;
-        push(ref(db, 'coupleDataV6/messages'), {
+        push(ref(db, 'coupleDataV7/messages'), {
             sender: currentUser, text: input.value, time: new Date().getHours() + ":" + new Date().getMinutes().toString().padStart(2, '0'), 
             date: getTodayStr(), timestamp: serverTimestamp()
         });
         input.value = '';
     };
 
-    window.deleteHistory = (key) => { if(confirm("確定刪除？")) remove(ref(db, `coupleDataV6/history/${key}`)); };
+    window.deleteHistory = (key) => { if(confirm("確定刪除這段回憶嗎？")) remove(ref(db, `coupleDataV7/history/${key}`)); };
 
     function render() {
         const myActive = globalData.active[currentUser];
         const partner = userMap[currentUser].partner;
         const pActive = globalData.active[partner];
+        const tmPlan = globalData.tomorrow[currentUser];
 
+        // 我的區域
         const myS = document.getElementById('my-section');
         if (!myActive) {
             myS.innerHTML = `
@@ -317,6 +329,7 @@
                 </div>`;
         }
 
+        // 對方區域
         const pS = document.getElementById('partner-section');
         if (!pActive) {
             pS.innerHTML = `<p class="status-msg">🍵 ${partner} 還在準備中⋯⋯</p>`;
@@ -327,20 +340,21 @@
                     <h4>${partner} 的任務</h4>
                     ${pActive.wish ? `<div class="wish-box">🎁 我的寶寶的願望：${pActive.wish}</div>` : ''}
                     ${pActive.items.map(it => `<div class="goal-item"><input type="checkbox" ${it.d ? 'checked' : ''} disabled><span>${it.t}</span></div>`).join('')}
-                    ${pActive.status === 'completed' ? '<p class="status-msg" style="color:#4caf50; font-weight:bold; font-size:1.1rem;">✨ 完成啦！💮 ✨</p>' : (pActive.status === 'reviewing' ? `<button class="main-btn" style="background:#ff6b81" onclick="approvePartner()">💮 幫 ${partner} 蓋章</button>` : `<p class="status-msg">加油中！ </p>`)}
+                    ${pActive.status === 'completed' ? '<p class="status-msg" style="color:#4caf50; font-weight:bold; font-size:1.1rem;">✨ 完成啦！💮 ✨</p>' : (pActive.status === 'reviewing' ? `<button class="main-btn" style="background:#ff6b81" onclick="approvePartner()">💮 幫 ${partner} 蓋章</button>` : `<p class="status-msg">加油中！期待你的願望 🍭</p>`)}
                 </div>`;
         }
 
+        // 留言
         const msgList = document.getElementById('message-list');
         const msgs = Object.values(globalData.messages || {}).sort((a,b) => a.timestamp - b.timestamp);
         msgList.innerHTML = msgs.length > 0 ? msgs.map(m => `<div class="msg-bubble ${m.sender === currentUser ? 'msg-right' : 'msg-left'}"><small style="font-size:0.6rem; opacity:0.7;">${m.time}</small><br>${m.text}</div>`).join('') : '<p style="text-align:center;color:#ccc;font-size:0.8rem;">還沒有留言...</p>';
         msgList.scrollTop = msgList.scrollHeight;
 
-        const tm = globalData.tomorrow[currentUser];
-        document.getElementById('tomorrow-input-group').style.display = tm ? 'none' : 'block';
-        document.getElementById('tomorrow-display').style.display = tm ? 'block' : 'none';
+        // 明日計畫顯示控制
+        document.getElementById('tomorrow-input-group').style.display = tmPlan ? 'none' : 'block';
+        document.getElementById('tomorrow-display').style.display = tmPlan ? 'block' : 'none';
 
-        // 歷史紀錄
+        // 歷史
         const hist = Object.entries(globalData.history || {}).sort(([,a], [,b]) => (b.timestamp||0) - (a.timestamp||0));
         document.getElementById('history-list').innerHTML = hist.map(([key, h]) => `
             <div class="history-item">
