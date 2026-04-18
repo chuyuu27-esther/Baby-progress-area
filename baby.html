@@ -1,123 +1,4 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>今天也要一起進步 🌸</title>
-    <style>
-        :root {
-            --bg-color: #fdfcf5; --primary-pink: #ffb7c5; --deep-pink: #e08e9b;
-            --accent-pink: #ffebee; --stamp-color: #ff6b81; --text-color: #5d4037;
-            --tomorrow-bg: #f5fff5; --tomorrow-border: #e2f3e2; 
-            --wish-yellow: #fff9e6; --wish-gold: #ffd700;
-            --shadow: 0 10px 25px rgba(224, 142, 155, 0.15);
-        }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body {
-            font-family: 'Hiragino Maru Gothic ProN', sans-serif;
-            background-color: var(--bg-color); color: var(--text-color);
-            display: flex; flex-direction: column; align-items: center;
-            padding: 20px; margin: 0; min-height: 100vh;
-        }
-        h2 { color: var(--deep-pink); font-weight: 600; margin-bottom: 5px; }
-        .subtitle { font-size: 0.85rem; color: #a08080; margin-bottom: 20px; }
-        .container {
-            width: 100%; max-width: 420px; background: white;
-            padding: 25px; border-radius: 30px;
-            box-shadow: var(--shadow); border: 2px solid var(--accent-pink);
-        }
-        .role-switcher { display: flex; gap: 10px; margin-bottom: 20px; background: var(--accent-pink); padding: 5px; border-radius: 50px; }
-        .role-btn { flex: 1; border: none; padding: 12px; border-radius: 50px; cursor: pointer; color: var(--deep-pink); background: transparent; font-weight: bold; transition: 0.3s; }
-        .role-btn.active { background: var(--primary-pink); color: white; }
-        
-        input[type="text"] { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid var(--accent-pink); border-radius: 12px; font-size: 1rem; }
-        .wish-input { background-color: var(--wish-yellow) !important; border: 2px dashed #ffe082 !important; color: #b8860b !important; }
-
-        .main-btn { width: 100%; background: var(--primary-pink); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; cursor: pointer; margin-top: 5px; }
-        .edit-btn { background: none; border: 1px solid var(--primary-pink); color: var(--primary-pink); padding: 5px 12px; border-radius: 10px; font-size: 0.8rem; cursor: pointer; margin-top: 10px; align-self: center; }
-
-        .wish-box { background: var(--wish-yellow); border: 2px dashed var(--bg-color); border-radius: 15px; padding: 10px; margin: 10px 0; font-size: 0.9rem; color: #b8860b; text-align: center; }
-
-        .goal-card { position: relative; border: 2px solid var(--accent-pink); border-radius: 20px; padding: 15px; background: #fffafb; margin-bottom: 20px; display: flex; flex-direction: column; }
-        .goal-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px dashed var(--accent-pink); }
-        
-        input[type="checkbox"] { appearance: none; width: 22px; height: 22px; border: 2px solid var(--primary-pink); border-radius: 6px; position: relative; cursor: pointer; }
-        input[type="checkbox"]:checked { background-color: var(--primary-pink); }
-        input[type="checkbox"]:checked::after { content: '❤'; position: absolute; color: white; font-size: 14px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-        
-        .stamp {
-            position: absolute; right: 5px; top: 5px; width: 70px; height: 70px;
-            border: 3px double var(--stamp-color); color: var(--stamp-color); border-radius: 50%;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: rgba(255, 255, 255, 0.8); transform: rotate(15deg); font-weight: bold; font-size: 0.8rem;
-        }
-        
-        .section-title { font-size: 1.1rem; color: var(--deep-pink); margin: 25px 0 10px 0; display: flex; align-items: center; gap: 8px; font-weight: bold; }
-        .tomorrow-board { width: 100%; max-width: 420px; border-radius: 20px; padding: 15px; border: 2px solid var(--tomorrow-border); margin-top: 10px; background: var(--tomorrow-bg); }
-        
-        .message-list { max-height: 200px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; padding: 5px; }
-        .msg-bubble { padding: 8px 12px; border-radius: 15px; max-width: 85%; font-size: 0.95rem; line-height: 1.4; }
-        .msg-left { align-self: flex-start; background: white; border: 1px solid var(--accent-pink); }
-        .msg-right { align-self: flex-end; background: var(--primary-pink); color: white; }
-
-        .history-item { background: white; padding: 12px; margin-bottom: 10px; border-radius: 15px; border-left: 5px solid var(--primary-pink); font-size: 0.85rem; position: relative; }
-        .history-stamp { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--stamp-color); font-size: 1.5rem; opacity: 0.4; }
-        .del-btn { position: absolute; right: 10px; top: 5px; background: none; border: none; color: #ddd; cursor: pointer; }
-
-        #celebration-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.95); z-index: 100;
-            display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center;
-        }
-    </style>
-</head>
-<body>
-
-<div id="celebration-overlay">
-    <div style="font-size: 80px;">💮</div>
-    <h1 style="color: var(--stamp-color);">世界最厲害的寶寶！</h1>
-    <p style="font-size: 1.2rem;">你做到了！<br>送你一個大大的ㄇㄨㄚˋ ❤</p>
-    <button class="main-btn" style="width:150px; margin-top:20px;" onclick="closeCelebration()">收下獎勵！</button>
-</div>
-
-<script>
-    const secret = "0926"; 
-    while (prompt("秘密代號 🤫") !== secret) { alert("不對喔！"); }
-</script>
-
-<h2>今天也要一起進步 🌸</h2>
-<div class="subtitle">小寶 🐶 & 大寶 🐰 的秘密基地</div>
-
-<div class="container">
-    <div class="role-switcher">
-        <button id="btnA" class="role-btn active" onclick="setRole('小寶')">小寶 🐶</button>
-        <button id="btnB" class="role-btn" onclick="setRole('大寶')">大寶 🐰</button>
-    </div>
-    <div id="my-section"></div>
-    <hr style="border: 0; border-top: 1px solid var(--accent-pink); margin: 25px 0;">
-    <div id="partner-section"></div>
-</div>
-
-<div class="section-title">💬 暖呼呼小語</div>
-<div class="container" style="padding:15px; box-shadow:none; border:1px solid var(--accent-pink);">
-    <div id="message-list" class="message-list"></div>
-    <div style="display:flex; gap:8px;">
-        <input type="text" id="msg-input" placeholder="說點什麼⋯⋯">
-        <button class="role-btn active" style="width:50px; flex:none; border-radius:15px;" onclick="sendMessage()">❤</button>
-    </div>
-</div>
-
-<div class="section-title">📅 預約明天的進步</div>
-<div class="tomorrow-board" id="tomorrow-area">
-</div>
-
-<div class="history-section" style="width: 100%; max-width: 420px;">
-    <div class="section-title">📜 成長足跡</div>
-    <div id="history-list"></div>
-</div>
-
 <script type="module">
-    // 【修改一】：引入的地方加上了 child
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set, onValue, push, remove, serverTimestamp, update, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
@@ -136,12 +17,14 @@
     let currentUser = '小寶';
     let globalData = { active: {}, tomorrow: {}, messages: {}, history: {} };
     const userMap = { '小寶': { partner: '大寶' }, '大寶': { partner: '小寶' } };
+    
+    // UI 編輯狀態（保護資料不被重整吃掉）
+    let isEditingToday = false;
+    let isEditingTomorrow = false;
 
-    // 【修改二】：修復時區陷阱，但保留凌晨4點才換日的聰明設定
     function getLogicDate() {
         const now = new Date();
         now.setHours(now.getHours() - 4); // 凌晨 4 點前算昨天
-        
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const day = String(now.getDate()).padStart(2, '0');
@@ -157,6 +40,7 @@
         currentUser = role;
         document.getElementById('btnA').classList.toggle('active', role === '小寶');
         document.getElementById('btnB').classList.toggle('active', role === '大寶');
+        isEditingToday = false; isEditingTomorrow = false; // 切換角色時重置編輯狀態
         render();
     };
 
@@ -173,18 +57,22 @@
         let needsUpdate = false;
         let updateData = {};
 
-        // 【修改三】：鋼鐵級自動清理邏輯 - 修復資料庫連續讀寫衝突
+        // 終極鋼鐵自動清理邏輯
         ['小寶', '大寶'].forEach(u => {
-            if (rawActive[u] && rawActive[u].logicDate !== logicToday) {
-                // 如果是昨天沒結案的，搬移到歷史
-                if (rawActive[u].status !== 'completed') {
+            const activeIsOld = rawActive[u] && rawActive[u].logicDate !== logicToday;
+            const tomorrowIsOld = rawTomorrow[u] && rawTomorrow[u].createDate && rawTomorrow[u].createDate !== logicToday;
+
+            if (activeIsOld || tomorrowIsOld) {
+                // 昨天沒結案的，搬移到歷史
+                if (rawActive[u] && rawActive[u].status !== 'completed') {
                     const newHistKey = push(child(ref(db), 'coupleDataV8/history')).key;
                     updateData[`history/${newHistKey}`] = { ...rawActive[u], timestamp: serverTimestamp() };
                 }
                 
-                // 檢查有無明日計畫
+                // 檢查有無明日計畫，直接升級為今日計畫
                 if (rawTomorrow[u]) {
                     updateData[`active/${u}`] = { ...rawTomorrow[u], logicDate: logicToday, date: getDisplayDate(logicToday), status: 'pending' };
+                    delete updateData[`active/${u}`].createDate; // 升級後清掉建立日期
                     updateData[`tomorrow/${u}`] = null;
                 } else {
                     updateData[`active/${u}`] = null;
@@ -211,6 +99,8 @@
         const goals = [document.getElementById('g1').value, document.getElementById('g2').value, document.getElementById('g3').value].filter(g => g?.trim());
         const wish = document.getElementById('g-wish').value;
         if(goals.length === 0) return alert("要寫目標喔！");
+        
+        isEditingToday = false;
         const logicToday = getLogicDate();
         set(ref(db, `coupleDataV8/active/${currentUser}`), {
             owner: currentUser, logicDate: logicToday, date: getDisplayDate(logicToday),
@@ -218,40 +108,22 @@
         });
     };
 
-    window.modifyTodayGoal = () => {
-        const current = globalData.active[currentUser];
-        if(!current) return;
-        const items = current.items.map(i => i.t);
-        const wish = current.wish || "";
-        set(ref(db, `coupleDataV8/active/${currentUser}`), null).then(() => {
-            setTimeout(() => {
-                items.forEach((t, i) => { if(document.getElementById('g'+(i+1))) document.getElementById('g'+(i+1)).value = t; });
-                document.getElementById('g-wish').value = wish;
-            }, 100);
-        });
-    };
-
     window.saveTomorrowPlan = () => {
         const goals = [document.getElementById('t1').value, document.getElementById('t2').value, document.getElementById('t3').value].filter(g => g?.trim());
         const wish = document.getElementById('t-wish').value;
         if(goals.length === 0) return alert("明天也要有計畫喔！");
+        
+        isEditingTomorrow = false;
         set(ref(db, `coupleDataV8/tomorrow/${currentUser}`), {
-            owner: currentUser, items: goals.map(g => ({t: g, d: false})), wish: wish
+            owner: currentUser, items: goals.map(g => ({t: g, d: false})), wish: wish, createDate: getLogicDate()
         });
     };
 
-    window.editTomorrow = () => {
-        const tm = globalData.tomorrow[currentUser];
-        if(!tm) return;
-        const items = tm.items.map(i => i.t);
-        const wish = tm.wish || "";
-        set(ref(db, `coupleDataV8/tomorrow/${currentUser}`), null).then(() => {
-            setTimeout(() => {
-                items.forEach((t, i) => { if(document.getElementById('t'+(i+1))) document.getElementById('t'+(i+1)).value = t; });
-                document.getElementById('t-wish').value = wish;
-            }, 100);
-        });
-    };
+    window.modifyTodayGoal = () => { isEditingToday = true; render(); };
+    window.cancelEditToday = () => { isEditingToday = false; render(); };
+    
+    window.editTomorrow = () => { isEditingTomorrow = true; render(); };
+    window.cancelEditTomorrow = () => { isEditingTomorrow = false; render(); };
 
     window.toggleCheck = (idx) => {
         const target = globalData.active[currentUser];
@@ -296,13 +168,29 @@
         const pActive = globalData.active[partner];
         const tmPlan = globalData.tomorrow[currentUser];
 
+        // --- 我的任務區渲染 ---
         const myS = document.getElementById('my-section');
-        if (!myActive) {
-            myS.innerHTML = `<div class="input-group"><h3>✍ 設定今日目標 (${getDisplayDate(getLogicDate())})</h3><input type="text" id="g1" placeholder="目標 1"><input type="text" id="g2" placeholder="目標 2"><input type="text" id="g3" placeholder="目標 3"><input type="text" id="g-wish" class="wish-input" placeholder="🎁 完成獎勵小許願"><button class="main-btn" onclick="submitGoals()">開始努力！ ✨</button></div>`;
+        if (!myActive || isEditingToday) {
+            myS.innerHTML = `<div class="input-group">
+                <h3>✍ ${isEditingToday ? '修改' : '設定'}今日目標 (${getDisplayDate(getLogicDate())})</h3>
+                <input type="text" id="g1" placeholder="目標 1">
+                <input type="text" id="g2" placeholder="目標 2">
+                <input type="text" id="g3" placeholder="目標 3">
+                <input type="text" id="g-wish" class="wish-input" placeholder="🎁 完成獎勵小許願">
+                <button class="main-btn" onclick="submitGoals()">${isEditingToday ? '儲存修改 ✨' : '開始努力！ ✨'}</button>
+                ${isEditingToday ? `<button class="edit-btn" style="color:#999; border-color:#ccc; margin-top:10px; width:100%;" onclick="cancelEditToday()">取消修改</button>` : ''}
+            </div>`;
+            if (isEditingToday && myActive) {
+                setTimeout(() => {
+                    myActive.items.forEach((it, i) => { if(document.getElementById('g'+(i+1))) document.getElementById('g'+(i+1)).value = it.t; });
+                    if(document.getElementById('g-wish')) document.getElementById('g-wish').value = myActive.wish || "";
+                }, 0);
+            }
         } else {
             myS.innerHTML = `<div class="goal-card">${myActive.status === 'completed' ? '<div class="stamp">💮<span>棒棒</span></div>' : ''}<h4>我的任務 (${myActive.date})</h4>${myActive.wish ? `<div class="wish-box">✨ 達成獎勵：${myActive.wish}</div>` : ''}${myActive.items.map((it, i) => `<div class="goal-item"><input type="checkbox" ${it.d ? 'checked' : ''} ${myActive.status!=='pending' ? 'disabled' : ''} onclick="toggleCheck(${i})"><span>${it.t}</span></div>`).join('')}<div style="margin-top:10px; display:flex; flex-direction:column; gap:5px;">${myActive.status === 'pending' ? '<button class="main-btn" onclick="requestReview()">完成！請寶寶蓋章</button>' : (myActive.status === 'reviewing' ? '<p class="status-msg">⏳ 等待寶寶蓋章中...</p>' : '<p class="status-msg" style="color:#4caf50; font-weight:bold;">🎉 任務已達成！</p>')}<button class="edit-btn" onclick="modifyTodayGoal()">修改/增加任務</button></div></div>`;
         }
 
+        // --- 伴侶任務區渲染 ---
         const pS = document.getElementById('partner-section');
         if (!pActive) {
             pS.innerHTML = `<p class="status-msg">🍵 ${partner} 還在準備中⋯⋯</p>`;
@@ -310,13 +198,29 @@
             pS.innerHTML = `<div class="goal-card">${pActive.status === 'completed' ? '<div class="stamp">💮<span>棒棒</span></div>' : ''}<h4>${partner} 的任務</h4>${pActive.wish ? `<div class="wish-box">🎁 我的寶寶的願望：${pActive.wish}</div>` : ''}${pActive.items.map(it => `<div class="goal-item"><input type="checkbox" ${it.d ? 'checked' : ''} disabled><span>${it.t}</span></div>`).join('')}${pActive.status === 'completed' ? '<p class="status-msg" style="color:#4caf50; font-weight:bold; font-size:1.1rem;">✨ 完成啦！💮 ✨</p>' : (pActive.status === 'reviewing' ? `<button class="main-btn" style="background:#ff6b81" onclick="approvePartner()">💮 幫 ${partner} 蓋章</button>` : `<p class="status-msg">加油中！期待你的願望 🍭</p>`)}</div>`;
         }
 
+        // --- 明日計畫區渲染 ---
         const tmArea = document.getElementById('tomorrow-area');
-        if (!tmPlan) {
-            tmArea.innerHTML = `<div class="tomorrow-board"><h4>提前規劃明天</h4><input type="text" id="t1" placeholder="明日計畫 1"><input type="text" id="t2" placeholder="明日計畫 2"><input type="text" id="t3" placeholder="明日計畫 3"><input type="text" id="t-wish" class="wish-input" placeholder="🎁 明日的獎勵小許願"><button class="main-btn" style="background:#a5d6a7" onclick="saveTomorrowPlan()">儲存明日計畫 ✨</button></div>`;
+        if (!tmPlan || isEditingTomorrow) {
+            tmArea.innerHTML = `<div class="tomorrow-board">
+                <h4>${isEditingTomorrow ? '✍ 修改明日計畫' : '提前規劃明天'}</h4>
+                <input type="text" id="t1" placeholder="明日計畫 1">
+                <input type="text" id="t2" placeholder="明日計畫 2">
+                <input type="text" id="t3" placeholder="明日計畫 3">
+                <input type="text" id="t-wish" class="wish-input" placeholder="🎁 明日的獎勵小許願">
+                <button class="main-btn" style="background:#a5d6a7" onclick="saveTomorrowPlan()">${isEditingTomorrow ? '儲存修改 ✨' : '儲存明日計畫 ✨'}</button>
+                ${isEditingTomorrow ? `<button class="edit-btn" style="color:#999; border-color:#ccc; margin-top:10px; width:100%;" onclick="cancelEditTomorrow()">取消修改</button>` : ''}
+            </div>`;
+            if (isEditingTomorrow && tmPlan) {
+                setTimeout(() => {
+                    tmPlan.items.forEach((it, i) => { if(document.getElementById('t'+(i+1))) document.getElementById('t'+(i+1)).value = it.t; });
+                    if(document.getElementById('t-wish')) document.getElementById('t-wish').value = tmPlan.wish || "";
+                }, 0);
+            }
         } else {
             tmArea.innerHTML = `<div class="tomorrow-board" style="text-align:center;"><p style="color:#4caf50; font-weight:bold;">明日計畫與願望已備妥 🚀</p><button class="edit-btn" style="border-color:#a5d6a7; color:#4caf50; margin:0;" onclick="editTomorrow()">修改明日計畫</button></div>`;
         }
 
+        // --- 留言與歷史 ---
         const msgList = document.getElementById('message-list');
         const msgs = Object.values(globalData.messages || {}).sort((a,b) => a.timestamp - b.timestamp);
         msgList.innerHTML = msgs.length > 0 ? msgs.map(m => `<div class="msg-bubble ${m.sender === currentUser ? 'msg-right' : 'msg-left'}"><small style="font-size:0.6rem; opacity:0.7;">${m.time}</small><br>${m.text}</div>`).join('') : '<p style="text-align:center;color:#ccc;font-size:0.8rem;">還沒有留言...</p>';
@@ -326,5 +230,3 @@
         document.getElementById('history-list').innerHTML = hist.map(([key, h]) => `<div class="history-item"><button class="del-btn" onclick="deleteHistory('${key}')">🗑️</button><div class="history-stamp">💮</div><small>${h.date} · ${h.owner}</small><br>${h.items.map(i => (i.d?'✅':'❌')+i.t).join(' | ')}</div>`).join('');
     }
 </script>
-</body>
-</html>
