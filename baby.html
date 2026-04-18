@@ -1,3 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>今天也要一起進步 🌸</title>
+    <style>
+        :root {
+            --bg-color: #fdfcf5; --primary-pink: #ffb7c5; --deep-pink: #e08e9b;
+            --accent-pink: #ffebee; --stamp-color: #ff6b81; --text-color: #5d4037;
+            --tomorrow-bg: #f5fff5; --tomorrow-border: #e2f3e2; 
+            --wish-yellow: #fff9e6; --wish-gold: #ffd700;
+            --shadow: 0 10px 25px rgba(224, 142, 155, 0.15);
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body {
+            font-family: 'Hiragino Maru Gothic ProN', sans-serif;
+            background-color: var(--bg-color); color: var(--text-color);
+            display: flex; flex-direction: column; align-items: center;
+            padding: 20px; margin: 0; min-height: 100vh;
+        }
+        h2 { color: var(--deep-pink); font-weight: 600; margin-bottom: 5px; }
+        .subtitle { font-size: 0.85rem; color: #a08080; margin-bottom: 20px; }
+        .container {
+            width: 100%; max-width: 420px; background: white;
+            padding: 25px; border-radius: 30px;
+            box-shadow: var(--shadow); border: 2px solid var(--accent-pink);
+        }
+        
+        input[type="text"] { width: 100%; padding: 12px; margin-bottom: 10px; border: 2px solid var(--accent-pink); border-radius: 12px; font-size: 1rem; }
+        .wish-input { background-color: var(--wish-yellow) !important; border: 2px dashed #ffe082 !important; color: #b8860b !important; }
+
+        .main-btn { width: 100%; background: var(--primary-pink); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        .edit-btn { background: none; border: 1px solid var(--primary-pink); color: var(--primary-pink); padding: 5px 12px; border-radius: 10px; font-size: 0.8rem; cursor: pointer; margin-top: 10px; align-self: center; }
+        .role-btn { flex: 1; border: none; padding: 12px; border-radius: 50px; cursor: pointer; color: var(--deep-pink); background: transparent; font-weight: bold; transition: 0.3s; }
+        .role-btn.active { background: var(--primary-pink); color: white; }
+
+        .wish-box { background: var(--wish-yellow); border: 2px dashed var(--bg-color); border-radius: 15px; padding: 10px; margin: 10px 0; font-size: 0.9rem; color: #b8860b; text-align: center; }
+
+        .goal-card { position: relative; border: 2px solid var(--accent-pink); border-radius: 20px; padding: 15px; background: #fffafb; margin-bottom: 20px; display: flex; flex-direction: column; }
+        .goal-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px dashed var(--accent-pink); }
+        
+        input[type="checkbox"] { appearance: none; width: 22px; height: 22px; border: 2px solid var(--primary-pink); border-radius: 6px; position: relative; cursor: pointer; }
+        input[type="checkbox"]:checked { background-color: var(--primary-pink); }
+        input[type="checkbox"]:checked::after { content: '❤'; position: absolute; color: white; font-size: 14px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        
+        .stamp {
+            position: absolute; right: 5px; top: 5px; width: 70px; height: 70px;
+            border: 3px double var(--stamp-color); color: var(--stamp-color); border-radius: 50%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(255, 255, 255, 0.8); transform: rotate(15deg); font-weight: bold; font-size: 0.8rem;
+        }
+        
+        .section-title { font-size: 1.1rem; color: var(--deep-pink); margin: 25px 0 10px 0; display: flex; align-items: center; gap: 8px; font-weight: bold; }
+        .tomorrow-board { width: 100%; max-width: 420px; border-radius: 20px; padding: 15px; border: 2px solid var(--tomorrow-border); margin-top: 10px; background: var(--tomorrow-bg); }
+        
+        .message-list { max-height: 200px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; padding: 5px; }
+        .msg-bubble { padding: 8px 12px; border-radius: 15px; max-width: 85%; font-size: 0.95rem; line-height: 1.4; }
+        .msg-left { align-self: flex-start; background: white; border: 1px solid var(--accent-pink); }
+        .msg-right { align-self: flex-end; background: var(--primary-pink); color: white; }
+
+        .history-item { background: white; padding: 12px; margin-bottom: 10px; border-radius: 15px; border-left: 5px solid var(--primary-pink); font-size: 0.85rem; position: relative; }
+        .history-stamp { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--stamp-color); font-size: 1.5rem; opacity: 0.4; }
+        .del-btn { position: absolute; right: 10px; top: 5px; background: none; border: none; color: #ddd; cursor: pointer; }
+
+        #celebration-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.95); z-index: 100;
+            display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div id="celebration-overlay">
+    <div style="font-size: 80px;">💮</div>
+    <h1 style="color: var(--stamp-color);">世界最厲害的寶寶！</h1>
+    <p style="font-size: 1.2rem;">你做到了！<br>送你一個大大的ㄇㄨㄚˋ ❤</p>
+    <button class="main-btn" style="width:150px; margin-top:20px;" onclick="closeCelebration()">收下獎勵！</button>
+</div>
+
+<script>
+    // 專屬密碼設定區（記得把大寶的密碼改掉喔！）
+    const passwords = {
+        "0926": "小寶",   
+        "1234": "大寶"    
+    };
+
+    window.loginRole = null;
+    while (!window.loginRole) {
+        let pwd = prompt("請輸入你的專屬秘密代號 🤫");
+        if (passwords[pwd]) {
+            window.loginRole = passwords[pwd];
+            alert(`歡迎回來，${window.loginRole}！🌸`);
+        } else {
+            alert("密碼不對喔！是不是走錯房間了？🐶🐰");
+        }
+    }
+</script>
+
+<h2>今天也要一起進步 🌸</h2>
+<div class="subtitle">小寶 🐶 & 大寶 🐰 的秘密基地</div>
+
+<div class="container">
+    <div id="my-section"></div>
+    <hr style="border: 0; border-top: 1px solid var(--accent-pink); margin: 25px 0;">
+    <div id="partner-section"></div>
+</div>
+
+<div class="section-title">💬 暖呼呼小語</div>
+<div class="container" style="padding:15px; box-shadow:none; border:1px solid var(--accent-pink);">
+    <div id="message-list" class="message-list"></div>
+    <div style="display:flex; gap:8px;">
+        <input type="text" id="msg-input" placeholder="說點什麼⋯⋯">
+        <button class="role-btn active" style="width:50px; flex:none; border-radius:15px;" onclick="sendMessage()">❤</button>
+    </div>
+</div>
+
+<div class="section-title">📅 預約明天的進步</div>
+<div class="tomorrow-board" id="tomorrow-area">
+</div>
+
+<div class="history-section" style="width: 100%; max-width: 420px;">
+    <div class="section-title">📜 成長足跡</div>
+    <div id="history-list"></div>
+</div>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set, onValue, push, remove, serverTimestamp, update, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -14,7 +141,8 @@
     const db = getDatabase(app);
     const dbRef = ref(db, 'coupleDataV8');
 
-    let currentUser = '小寶';
+    // 取得剛才登入的身分
+    let currentUser = window.loginRole; 
     let globalData = { active: {}, tomorrow: {}, messages: {}, history: {} };
     const userMap = { '小寶': { partner: '大寶' }, '大寶': { partner: '小寶' } };
     
@@ -35,14 +163,6 @@
         const [y, m, d] = logicDate.split('-');
         return `${parseInt(m)}月${parseInt(d)}日`;
     }
-
-    window.setRole = (role) => {
-        currentUser = role;
-        document.getElementById('btnA').classList.toggle('active', role === '小寶');
-        document.getElementById('btnB').classList.toggle('active', role === '大寶');
-        isEditingToday = false; isEditingTomorrow = false; // 切換角色時重置編輯狀態
-        render();
-    };
 
     onValue(dbRef, (snapshot) => {
         const d = snapshot.val() || {};
@@ -230,3 +350,5 @@
         document.getElementById('history-list').innerHTML = hist.map(([key, h]) => `<div class="history-item"><button class="del-btn" onclick="deleteHistory('${key}')">🗑️</button><div class="history-stamp">💮</div><small>${h.date} · ${h.owner}</small><br>${h.items.map(i => (i.d?'✅':'❌')+i.t).join(' | ')}</div>`).join('');
     }
 </script>
+</body>
+</html>
