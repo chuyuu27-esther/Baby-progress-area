@@ -52,16 +52,22 @@
         }
         
         .section-title { font-size: 1.1rem; color: var(--deep-pink); margin: 25px 0 10px 0; display: flex; align-items: center; gap: 8px; font-weight: bold; }
-        .tomorrow-board { width: 100%; max-width: 420px; border-radius: 20px; padding: 15px; border: 2px solid var(--tomorrow-border); margin-top: 10px; background: var(--tomorrow-bg); }
+        .tomorrow-board { width: 100%; border-radius: 15px; padding: 15px; border: 2px solid var(--tomorrow-border); background: var(--tomorrow-bg); }
         
         .message-list { max-height: 200px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; padding: 5px; }
         .msg-bubble { padding: 8px 12px; border-radius: 15px; max-width: 85%; font-size: 0.95rem; line-height: 1.4; }
         .msg-left { align-self: flex-start; background: white; border: 1px solid var(--accent-pink); }
         .msg-right { align-self: flex-end; background: var(--primary-pink); color: white; }
 
-        .history-item { background: white; padding: 12px; margin-bottom: 10px; border-radius: 15px; border-left: 5px solid var(--primary-pink); font-size: 0.85rem; position: relative; }
-        .history-stamp { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--stamp-color); font-size: 1.5rem; opacity: 0.4; }
-        .del-btn { position: absolute; right: 10px; top: 5px; background: none; border: none; color: #ddd; cursor: pointer; }
+        /* 足跡與統計相關 CSS */
+        .history-day-group { margin-bottom: 15px; border-radius: 15px; overflow: hidden; border: 1px solid var(--accent-pink); }
+        .history-bg-white { background: white; }
+        .history-bg-pink { background: var(--accent-pink); }
+        .history-item { display: flex; align-items: center; gap: 12px; padding: 15px; position: relative; border-bottom: 1px dashed rgba(224, 142, 155, 0.3); font-size: 0.85rem; }
+        .history-item:last-child { border-bottom: none; }
+        .history-stamp { color: var(--stamp-color); font-size: 2.2rem; flex-shrink: 0; transform: rotate(-10deg); user-select: none; width: 40px; text-align: center; }
+        .history-content { flex: 1; line-height: 1.5; }
+        .del-btn { position: absolute; right: 10px; top: 10px; background: none; border: none; color: #bbb; cursor: pointer; font-size: 1rem; }
 
         #celebration-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -80,7 +86,6 @@
 </div>
 
 <script>
-    // 專屬密碼設定區（記得把大寶的密碼改掉喔！）
     const passwords = {
         "0926": "小寶",   
         "2022": "大寶"    
@@ -117,7 +122,13 @@
 </div>
 
 <div class="section-title">📅 預約明天的進步</div>
-<div class="tomorrow-board" id="tomorrow-area">
+<div class="container" style="padding:25px; box-shadow:none; border:1px solid var(--accent-pink);">
+    <div id="tomorrow-area"></div>
+</div>
+
+<div class="section-title">🏆 我是最棒的</div>
+<div class="container" style="padding:20px; box-shadow:none; border:1px solid var(--accent-pink);">
+    <div id="stats-area"></div>
 </div>
 
 <div class="history-section" style="width: 100%; max-width: 420px;">
@@ -141,18 +152,17 @@
     const db = getDatabase(app);
     const dbRef = ref(db, 'coupleDataV8');
 
-    // 取得剛才登入的身分
     let currentUser = window.loginRole; 
     let globalData = { active: {}, tomorrow: {}, messages: {}, history: {} };
     const userMap = { '小寶': { partner: '大寶' }, '大寶': { partner: '小寶' } };
     
-    // UI 編輯狀態（保護資料不被重整吃掉）
     let isEditingToday = false;
     let isEditingTomorrow = false;
+    window.showAllHistory = false; // 控制足跡顯示長度
 
     function getLogicDate() {
         const now = new Date();
-        now.setHours(now.getHours() - 4); // 凌晨 4 點前算昨天
+        now.setHours(now.getHours() - 4); 
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const day = String(now.getDate()).padStart(2, '0');
@@ -174,29 +184,34 @@
 
         let rawActive = d.active || {};
         let rawTomorrow = d.tomorrow || {};
+        let rawMessages = d.messages || {};
         let needsUpdate = false;
         let updateData = {};
 
-        // 終極鋼鐵自動清理邏輯
         ['小寶', '大寶'].forEach(u => {
             const activeIsOld = rawActive[u] && rawActive[u].logicDate !== logicToday;
             const tomorrowIsOld = rawTomorrow[u] && rawTomorrow[u].createDate && rawTomorrow[u].createDate !== logicToday;
 
             if (activeIsOld || tomorrowIsOld) {
-                // 昨天沒結案的，搬移到歷史
                 if (rawActive[u] && rawActive[u].status !== 'completed') {
                     const newHistKey = push(child(ref(db), 'coupleDataV8/history')).key;
                     updateData[`history/${newHistKey}`] = { ...rawActive[u], timestamp: serverTimestamp() };
                 }
                 
-                // 檢查有無明日計畫，直接升級為今日計畫
                 if (rawTomorrow[u]) {
                     updateData[`active/${u}`] = { ...rawTomorrow[u], logicDate: logicToday, date: getDisplayDate(logicToday), status: 'pending' };
-                    delete updateData[`active/${u}`].createDate; // 升級後清掉建立日期
+                    delete updateData[`active/${u}`].createDate; 
                     updateData[`tomorrow/${u}`] = null;
                 } else {
                     updateData[`active/${u}`] = null;
                 }
+                needsUpdate = true;
+            }
+        });
+
+        Object.keys(rawMessages).forEach(k => {
+            if (rawMessages[k].logicDate !== logicToday) {
+                updateData[`messages/${k}`] = null;
                 needsUpdate = true;
             }
         });
@@ -206,7 +221,7 @@
             return; 
         }
 
-        globalData = { active: rawActive, tomorrow: rawTomorrow, messages: d.messages || {}, history: d.history || {} };
+        globalData = { active: rawActive, tomorrow: rawTomorrow, messages: rawMessages, history: d.history || {} };
         render();
     });
 
@@ -244,6 +259,7 @@
     
     window.editTomorrow = () => { isEditingTomorrow = true; render(); };
     window.cancelEditTomorrow = () => { isEditingTomorrow = false; render(); };
+    window.toggleHistory = () => { window.showAllHistory = !window.showAllHistory; render(); };
 
     window.toggleCheck = (idx) => {
         const target = globalData.active[currentUser];
@@ -275,7 +291,9 @@
         if(!input.value.trim()) return;
         push(ref(db, 'coupleDataV8/messages'), {
             sender: currentUser, text: input.value, time: new Date().getHours() + ":" + new Date().getMinutes().toString().padStart(2, '0'), 
-            date: getDisplayDate(getLogicDate()), timestamp: serverTimestamp()
+            date: getDisplayDate(getLogicDate()), 
+            logicDate: getLogicDate(), 
+            timestamp: serverTimestamp()
         });
         input.value = '';
     };
@@ -288,7 +306,6 @@
         const pActive = globalData.active[partner];
         const tmPlan = globalData.tomorrow[currentUser];
 
-        // --- 我的任務區渲染 ---
         const myS = document.getElementById('my-section');
         if (!myActive || isEditingToday) {
             myS.innerHTML = `<div class="input-group">
@@ -310,7 +327,6 @@
             myS.innerHTML = `<div class="goal-card">${myActive.status === 'completed' ? '<div class="stamp">💮<span>棒棒</span></div>' : ''}<h4>我的任務 (${myActive.date})</h4>${myActive.wish ? `<div class="wish-box">✨ 達成獎勵：${myActive.wish}</div>` : ''}${myActive.items.map((it, i) => `<div class="goal-item"><input type="checkbox" ${it.d ? 'checked' : ''} ${myActive.status!=='pending' ? 'disabled' : ''} onclick="toggleCheck(${i})"><span>${it.t}</span></div>`).join('')}<div style="margin-top:10px; display:flex; flex-direction:column; gap:5px;">${myActive.status === 'pending' ? '<button class="main-btn" onclick="requestReview()">完成！請寶寶蓋章</button>' : (myActive.status === 'reviewing' ? '<p class="status-msg">⏳ 等待寶寶蓋章中...</p>' : '<p class="status-msg" style="color:#4caf50; font-weight:bold;">🎉 任務已達成！</p>')}<button class="edit-btn" onclick="modifyTodayGoal()">修改/增加任務</button></div></div>`;
         }
 
-        // --- 伴侶任務區渲染 ---
         const pS = document.getElementById('partner-section');
         if (!pActive) {
             pS.innerHTML = `<p class="status-msg">🍵 ${partner} 還在準備中⋯⋯</p>`;
@@ -318,11 +334,10 @@
             pS.innerHTML = `<div class="goal-card">${pActive.status === 'completed' ? '<div class="stamp">💮<span>棒棒</span></div>' : ''}<h4>${partner} 的任務</h4>${pActive.wish ? `<div class="wish-box">🎁 我的寶寶的願望：${pActive.wish}</div>` : ''}${pActive.items.map(it => `<div class="goal-item"><input type="checkbox" ${it.d ? 'checked' : ''} disabled><span>${it.t}</span></div>`).join('')}${pActive.status === 'completed' ? '<p class="status-msg" style="color:#4caf50; font-weight:bold; font-size:1.1rem;">✨ 完成啦！💮 ✨</p>' : (pActive.status === 'reviewing' ? `<button class="main-btn" style="background:#ff6b81" onclick="approvePartner()">💮 幫 ${partner} 蓋章</button>` : `<p class="status-msg">加油中！期待你的願望 🍭</p>`)}</div>`;
         }
 
-        // --- 明日計畫區渲染 ---
         const tmArea = document.getElementById('tomorrow-area');
         if (!tmPlan || isEditingTomorrow) {
-            tmArea.innerHTML = `<div class="tomorrow-board">
-                <h4>${isEditingTomorrow ? '✍ 修改明日計畫' : '提前規劃明天'}</h4>
+            tmArea.innerHTML = `<div class="tomorrow-board" style="margin:0;">
+                <h4 style="margin-top:0;">${isEditingTomorrow ? '✍ 修改明日計畫' : '提前規劃明天'}</h4>
                 <input type="text" id="t1" placeholder="明日計畫 1">
                 <input type="text" id="t2" placeholder="明日計畫 2">
                 <input type="text" id="t3" placeholder="明日計畫 3">
@@ -337,17 +352,83 @@
                 }, 0);
             }
         } else {
-            tmArea.innerHTML = `<div class="tomorrow-board" style="text-align:center;"><p style="color:#4caf50; font-weight:bold;">明日計畫與願望已備妥 🚀</p><button class="edit-btn" style="border-color:#a5d6a7; color:#4caf50; margin:0;" onclick="editTomorrow()">修改明日計畫</button></div>`;
+            tmArea.innerHTML = `<div class="tomorrow-board" style="text-align:center; margin:0;"><p style="color:#4caf50; font-weight:bold; margin-top:0;">明日計畫與願望已備妥 🚀</p><button class="edit-btn" style="border-color:#a5d6a7; color:#4caf50; margin:0;" onclick="editTomorrow()">修改明日計畫</button></div>`;
         }
 
-        // --- 留言與歷史 ---
         const msgList = document.getElementById('message-list');
         const msgs = Object.values(globalData.messages || {}).sort((a,b) => a.timestamp - b.timestamp);
         msgList.innerHTML = msgs.length > 0 ? msgs.map(m => `<div class="msg-bubble ${m.sender === currentUser ? 'msg-right' : 'msg-left'}"><small style="font-size:0.6rem; opacity:0.7;">${m.time}</small><br>${m.text}</div>`).join('') : '<p style="text-align:center;color:#ccc;font-size:0.8rem;">還沒有留言...</p>';
         msgList.scrollTop = msgList.scrollHeight;
 
-        const hist = Object.entries(globalData.history || {}).sort(([,a], [,b]) => (b.timestamp||0) - (a.timestamp||0));
-        document.getElementById('history-list').innerHTML = hist.map(([key, h]) => `<div class="history-item"><button class="del-btn" onclick="deleteHistory('${key}')">🗑️</button><div class="history-stamp">💮</div><small>${h.date} · ${h.owner}</small><br>${h.items.map(i => (i.d?'✅':'❌')+i.t).join(' | ')}</div>`).join('');
+        // --- 月曆與統計計算 ---
+        const logicToday = getLogicDate();
+        const [currY, currM] = logicToday.split('-');
+        let myStamps = 0, partnerStamps = 0;
+        const myStampedDates = new Set();
+        
+        Object.values(globalData.history || {}).forEach(h => {
+            if(h.status === 'completed' && h.logicDate && h.logicDate.startsWith(`${currY}-${currM}`)) {
+                if(h.owner === currentUser) { myStamps++; myStampedDates.add(h.logicDate); }
+                if(h.owner === partner) partnerStamps++;
+            }
+        });
+        
+        let leadText = myStamps > partnerStamps ? `👑 目前我領先！` : (myStamps < partnerStamps ? `🔥 ${partner} 領先中，我要加速了！` : `🤝 我們一樣厲害！`);
+        let statsHtml = `<p style="text-align:center; font-weight:bold; color:var(--deep-pink); margin:0 0 10px 0;">本月戰況 (${currM}月) <br> <span style="font-size:0.9rem; color:#888;">我 ${myStamps} 個章 vs ${partner} ${partnerStamps} 個章</span><br><span style="font-size:0.8rem; color:#ffb7c5;">${leadText}</span></p>`;
+        
+        statsHtml += `<div style="display:grid; grid-template-columns:repeat(7,1fr); gap:5px; text-align:center; font-size:0.8rem; margin-top:15px;">`;
+        ['日','一','二','三','四','五','六'].forEach(d => statsHtml += `<div style="font-weight:bold; color:#a08080;">${d}</div>`);
+        
+        const firstDayOfWeek = new Date(parseInt(currY), parseInt(currM)-1, 1).getDay();
+        const daysInMonth = new Date(parseInt(currY), parseInt(currM), 0).getDate();
+        
+        for(let i=0; i<firstDayOfWeek; i++) statsHtml += `<div></div>`;
+        for(let d=1; d<=daysInMonth; d++) {
+            const dayStr = `${currY}-${currM}-${String(d).padStart(2,'0')}`;
+            const hasStamp = myStampedDates.has(dayStr);
+            statsHtml += `<div style="padding:6px 0; border-radius:8px; background:${hasStamp?'var(--accent-pink)':'#f9f9f9'}; position:relative; overflow:hidden;">
+                <span style="position:relative; z-index:2; ${hasStamp?'font-weight:bold; color:var(--deep-pink);':''}">${d}</span>
+                ${hasStamp ? '<div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:1.8rem; opacity:0.4; z-index:1; user-select:none;">💮</div>' : ''}
+            </div>`;
+        }
+        statsHtml += `</div>`;
+        document.getElementById('stats-area').innerHTML = statsHtml;
+
+        // --- 成長足跡分組與交替顯示 ---
+        const histRaw = Object.entries(globalData.history || {}).sort(([,a], [,b]) => (b.timestamp||0) - (a.timestamp||0));
+        const groupedDates = [];
+        histRaw.forEach(([key, h]) => {
+            const dKey = h.logicDate || h.date;
+            let group = groupedDates.find(g => g.dateKey === dKey);
+            if(!group) { group = { dateKey: dKey, items: [] }; groupedDates.push(group); }
+            group.items.push({ key, ...h });
+        });
+        
+        // 確保依照日期近到遠排序
+        groupedDates.sort((a,b) => b.dateKey.localeCompare(a.dateKey));
+        
+        const displayGroups = window.showAllHistory ? groupedDates : groupedDates.slice(0, 7);
+        let histHtml = displayGroups.map((group, gIdx) => {
+            const bgClass = gIdx % 2 === 0 ? 'history-bg-white' : 'history-bg-pink';
+            return `<div class="history-day-group ${bgClass}">
+                ${group.items.map(h => `
+                <div class="history-item">
+                    <button class="del-btn" onclick="deleteHistory('${h.key}')">🗑️</button>
+                    <div class="history-stamp">${h.status === 'completed' ? '💮' : '<span style="opacity:0.2;">⭕</span>'}</div>
+                    <div class="history-content">
+                        <small style="color:#888; font-weight:bold;">${h.date} · ${h.owner}</small><br>
+                        ${h.items.map(i => (i.d ? '✅' : '❌') + i.t).join('<br>')}
+                    </div>
+                </div>`).join('')}
+            </div>`;
+        }).join('');
+
+        if (groupedDates.length > 7) {
+            histHtml += `<button class="edit-btn" style="width:100%; margin-top:10px; background:white;" onclick="toggleHistory()">${window.showAllHistory ? '收合紀錄 🔼' : '瀏覽全部記錄 🔽'}</button>`;
+        } else if (groupedDates.length === 0) {
+            histHtml += `<p style="text-align:center; color:#ccc; font-size:0.9rem;">目前還沒有紀錄喔 🌱</p>`;
+        }
+        document.getElementById('history-list').innerHTML = histHtml;
     }
 </script>
 </body>
