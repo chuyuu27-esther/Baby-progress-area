@@ -101,7 +101,7 @@
 
 <div id="summary-overlay">
     <div style="font-size: 60px;">🏆</div>
-    <h2 id="summary-title" style="color: var(--stamp-color);">上月進步結算單</h2>
+    <h2 id="summary-title" style="color: var(--stamp-color);">上月PK結果</h2>
     <div id="summary-content" class="container" style="box-shadow:none; border-style:dashed; margin:20px 0;"></div>
     <button class="main-btn" style="width:180px;" onclick="closeSummary()">收到！新月份加油！✨</button>
 </div>
@@ -373,7 +373,7 @@
             myS.innerHTML = `<h3>✍ ${isEditingToday ? '修改' : '設定'}今日目標</h3><input type="text" id="g1" placeholder="目標 1"><input type="text" id="g2" placeholder="目標 2"><input type="text" id="g3" placeholder="目標 3"><input type="text" id="g-wish" class="wish-input" placeholder="🎁 完成獎勵小許願"><button class="main-btn" onclick="submitGoals()">儲存 ✨</button>${isEditingToday ? `<button class="edit-btn" onclick="cancelEditToday()">取消</button>` : ''}`;
             if(isEditingToday && myActive) setTimeout(() => { myActive.items.forEach((it, i) => { if(document.getElementById('g'+(i+1))) document.getElementById('g'+(i+1)).value = it.t; }); document.getElementById('g-wish').value = myActive.wish || ""; }, 0);
         } else {
-            myS.innerHTML = `<div class="goal-card">${myActive.status === 'completed' ? '<div class="stamp">💮<span>棒棒</span></div>' : ''}<h4>我的任務 (${myActive.date})</h4>${myActive.wish ? `<div class="wish-box">✨ 獎勵：${myActive.wish}</div>` : ''}${myActive.items.map((it, i) => `<div class="goal-item"><input type="checkbox" ${it.d ? 'checked' : ''} ${myActive.status!=='pending' ? 'disabled' : ''} onclick="toggleCheck(${i})"><span>${it.t}</span></div>`).join('')}<div style="margin-top:10px; display:flex; flex-direction:column; gap:5px;">${myActive.status === 'pending' ? '<button class="main-btn" onclick="requestReview()">完成！請蓋章</button>' : (myActive.status === 'reviewing' ? '<p class="status-msg">⏳ 等待蓋章中...</p>' : '<p style="color:#4caf50; font-weight:bold;">🎉 任務已達成！</p>')}<button class="edit-btn" onclick="modifyTodayGoal()">修改任務</button></div></div>`;
+            myS.innerHTML = `<div class="goal-card">${myActive.status === 'completed' ? '<div class="stamp">💮<span>棒棒</span></div>' : ''}<h4>我的任務 (${myActive.date})</h4>${myActive.wish ? `<div class="wish-box">✨ 獎勵：${myActive.wish}</div>` : ''}${myActive.items.map((it, i) => `<div class="goal-item"><input type="checkbox" ${it.d ? 'checked' : ''} ${myActive.status!=='pending' ? 'disabled' : ''} onclick="toggleCheck(${i})"><span>${it.t}</span></div>`).join('')}<div style="margin-top:10px; display:flex; flex-direction:column; gap:5px;">${myActive.status === 'pending' ? '<button class="main-btn" onclick="requestReview()">完成！請寶寶蓋章</button>' : (myActive.status === 'reviewing' ? '<p class="status-msg">⏳ 等待蓋章中...</p>' : '<p style="color:#4caf50; font-weight:bold;">🎉 任務已達成！</p>')}<button class="edit-btn" onclick="modifyTodayGoal()">修改任務</button></div></div>`;
         }
 
         const pS = document.getElementById('partner-section');
