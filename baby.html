@@ -101,7 +101,7 @@
 
 <div id="summary-overlay">
     <div style="font-size: 60px;">🏆</div>
-    <h2 id="summary-title" style="color: var(--stamp-color);">上個月PK結果</h2>
+    <h2 id="summary-title" style="color: var(--stamp-color);">上月進步結算單</h2>
     <div id="summary-content" class="container" style="box-shadow:none; border-style:dashed; margin:20px 0;"></div>
     <button class="main-btn" style="width:180px;" onclick="closeSummary()">收到！新月份加油！✨</button>
 </div>
@@ -115,7 +115,7 @@
             window.loginRole = passwords[pwd];
             alert(`歡迎回來，${window.loginRole}！🌸`);
         } else {
-            alert("再好好想想啊！");
+            alert("密碼不對喔！");
         }
     }
 </script>
@@ -277,9 +277,10 @@
         set(ref(db, `coupleDataV8/active/${currentUser}`), null);
     };
 
-    // --- 新增：當月補蓋印章功能 ---
+    // --- 修改：補蓋章加上身分驗證，並且修改提示文字 ---
     window.retroStamp = (key) => {
-        if(confirm("確定要幫這天的任務補蓋章嗎？✨\n(系統會自動幫您將未完成的目標打勾喔！)")) {
+        const partner = userMap[currentUser].partner;
+        if(confirm(`確定要幫 ${partner} 補蓋章嗎？✨\n(系統會自動幫寶貝將未完成的目標打勾喔！)`)) {
             const hData = globalData.history[key];
             if(hData) {
                 hData.status = 'completed';
@@ -365,14 +366,14 @@
     function render() {
         const partner = userMap[currentUser].partner;
         const myActive = globalData.active[currentUser], pActive = globalData.active[partner], tmPlan = globalData.tomorrow[currentUser];
-        const currentMonthStr = getLogicDate().substring(0, 7); // 用於檢查是否可補蓋章
+        const currentMonthStr = getLogicDate().substring(0, 7); 
 
         const myS = document.getElementById('my-section');
         if (!myActive || isEditingToday) {
             myS.innerHTML = `<h3>✍ ${isEditingToday ? '修改' : '設定'}今日目標</h3><input type="text" id="g1" placeholder="目標 1"><input type="text" id="g2" placeholder="目標 2"><input type="text" id="g3" placeholder="目標 3"><input type="text" id="g-wish" class="wish-input" placeholder="🎁 完成獎勵小許願"><button class="main-btn" onclick="submitGoals()">儲存 ✨</button>${isEditingToday ? `<button class="edit-btn" onclick="cancelEditToday()">取消</button>` : ''}`;
             if(isEditingToday && myActive) setTimeout(() => { myActive.items.forEach((it, i) => { if(document.getElementById('g'+(i+1))) document.getElementById('g'+(i+1)).value = it.t; }); document.getElementById('g-wish').value = myActive.wish || ""; }, 0);
         } else {
-            myS.innerHTML = `<div class="goal-card">${myActive.status === 'completed' ? '<div class="stamp">💮<span>棒棒</span></div>' : ''}<h4>我的任務 (${myActive.date})</h4>${myActive.wish ? `<div class="wish-box">✨ 獎勵：${myActive.wish}</div>` : ''}${myActive.items.map((it, i) => `<div class="goal-item"><input type="checkbox" ${it.d ? 'checked' : ''} ${myActive.status!=='pending' ? 'disabled' : ''} onclick="toggleCheck(${i})"><span>${it.t}</span></div>`).join('')}<div style="margin-top:10px; display:flex; flex-direction:column; gap:5px;">${myActive.status === 'pending' ? '<button class="main-btn" onclick="requestReview()">完成！請寶寶蓋章</button>' : (myActive.status === 'reviewing' ? '<p class="status-msg">⏳ 等待蓋章中...</p>' : '<p style="color:#4caf50; font-weight:bold;">🎉 任務已達成！</p>')}<button class="edit-btn" onclick="modifyTodayGoal()">修改任務</button></div></div>`;
+            myS.innerHTML = `<div class="goal-card">${myActive.status === 'completed' ? '<div class="stamp">💮<span>棒棒</span></div>' : ''}<h4>我的任務 (${myActive.date})</h4>${myActive.wish ? `<div class="wish-box">✨ 獎勵：${myActive.wish}</div>` : ''}${myActive.items.map((it, i) => `<div class="goal-item"><input type="checkbox" ${it.d ? 'checked' : ''} ${myActive.status!=='pending' ? 'disabled' : ''} onclick="toggleCheck(${i})"><span>${it.t}</span></div>`).join('')}<div style="margin-top:10px; display:flex; flex-direction:column; gap:5px;">${myActive.status === 'pending' ? '<button class="main-btn" onclick="requestReview()">完成！請蓋章</button>' : (myActive.status === 'reviewing' ? '<p class="status-msg">⏳ 等待蓋章中...</p>' : '<p style="color:#4caf50; font-weight:bold;">🎉 任務已達成！</p>')}<button class="edit-btn" onclick="modifyTodayGoal()">修改任務</button></div></div>`;
         }
 
         const pS = document.getElementById('partner-section');
@@ -395,7 +396,7 @@
         renderCalendar('stats', statsViewDate, 'stats-area');
         renderCalendar('video', videoViewDate, 'video-calendar-area');
 
-        // 足跡渲染 (加入補蓋按鈕邏輯)
+        // 足跡渲染 (更新補蓋按鈕驗證邏輯)
         const histRaw = Object.entries(globalData.history || {}).sort(([,a], [,b]) => (b.timestamp||0) - (a.timestamp||0));
         const groupedDates = [];
         histRaw.forEach(([key, h]) => {
@@ -410,8 +411,8 @@
             <div class="history-day-group ${gIdx % 2 === 0 ? 'history-bg-white' : 'history-bg-pink'}">
                 <div style="text-align:center; font-weight:bold; color:var(--deep-pink); padding:10px;">✨ ${group.items[0].date} ✨</div>
                 ${group.items.map(h => {
-                    // 判斷是否符合補蓋資格 (未完成且屬於當月)
-                    const canRetroStamp = h.status !== 'completed' && h.logicDate && h.logicDate.startsWith(currentMonthStr);
+                    // 判斷是否符合補蓋資格：未完成、屬於當月、而且「必須是對方的紀錄」
+                    const canRetroStamp = h.status !== 'completed' && h.logicDate && h.logicDate.startsWith(currentMonthStr) && h.owner === partner;
                     
                     return `
                     <div class="history-item">
@@ -419,7 +420,7 @@
                         <div class="history-stamp">${h.status === 'completed' ? '💮' : '<div style="width: 20px; height: 20px; border-radius: 50%; background: #e0e0e0; margin: 0 auto;"></div>'}</div>
                         <div class="history-content">
                             <b>${h.owner}</b>
-                            ${canRetroStamp ? `<button style="margin-left:8px; padding:2px 8px; background:var(--primary-pink); color:white; border:none; border-radius:10px; font-size:0.75rem; cursor:pointer;" onclick="retroStamp('${h.key}')">補蓋章 💮</button>` : ''}
+                            ${canRetroStamp ? `<button style="margin-left:8px; padding:2px 8px; background:var(--primary-pink); color:white; border:none; border-radius:10px; font-size:0.75rem; cursor:pointer;" onclick="retroStamp('${h.key}')">幫${partner}補蓋 💮</button>` : ''}
                             <br>${h.items.map(i => (i.d ? '✅' : '❌') + i.t).join(' | ')}
                         </div>
                     </div>`;
