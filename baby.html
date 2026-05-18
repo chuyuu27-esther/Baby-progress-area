@@ -196,7 +196,10 @@
     
     let isEditingToday = false, isEditingTomorrow = false;
     window.showAllHistory = false;
+    
+    // 影片全域變數
     window.currentVideoDate = null;
+    window.currentVideoFilter = null;
 
     let statsViewDate = new Date(); 
     let videoViewDate = new Date(); 
@@ -301,9 +304,10 @@
         set(ref(db, `coupleDataV8/active/${currentUser}`), null);
     };
 
-    // --- 影片清單邏輯 ---
-    window.openVideoModal = (dateStr) => {
+    // --- 影片清單與修改邏輯 ---
+    window.openVideoModal = (dateStr, filterOwner = null) => {
         window.currentVideoDate = dateStr;
+        window.currentVideoFilter = filterOwner;
         window.renderVideoModal();
         document.getElementById('video-modal-overlay').style.display = 'flex';
     };
@@ -314,35 +318,45 @@
 
     window.renderVideoModal = () => {
         const dateStr = window.currentVideoDate;
-        document.getElementById('video-modal-title').innerText = `🎥 ${dateStr}`;
+        const filter = window.currentVideoFilter;
+        
+        let titleText = `🎥 ${dateStr}`;
+        if (filter === '小寶') titleText += '<br><small style="font-size:0.9rem; color:#888;">🐶 小寶的專屬頻道</small>';
+        if (filter === '大寶') titleText += '<br><small style="font-size:0.9rem; color:#888;">🐰 大寶的專屬頻道</small>';
+        document.getElementById('video-modal-title').innerHTML = titleText;
+        
         const vData = globalData.videos[dateStr] || {};
         let listHtml = '';
 
-        // 相容舊版資料：若為字串格式
-        if (typeof vData.dog === 'string') listHtml += createVideoItemHtml('dog', '小寶', '本日分享影片', vData.dog);
-        if (typeof vData.rabbit === 'string') listHtml += createVideoItemHtml('rabbit', '大寶', '本日分享影片', vData.rabbit);
+        if (typeof vData.dog === 'string') {
+            if (!filter || filter === '小寶') listHtml += createVideoItemHtml('dog', '小寶', '本日分享影片', vData.dog);
+        }
+        if (typeof vData.rabbit === 'string') {
+            if (!filter || filter === '大寶') listHtml += createVideoItemHtml('rabbit', '大寶', '本日分享影片', vData.rabbit);
+        }
 
-        // 新版多影片資料：物件格式
         Object.entries(vData).forEach(([k, v]) => {
             if (k !== 'dog' && k !== 'rabbit' && typeof v === 'object') {
-                listHtml += createVideoItemHtml(k, v.owner, v.title, v.url);
+                if (!filter || filter === v.owner) {
+                    listHtml += createVideoItemHtml(k, v.owner, v.title, v.url);
+                }
             }
         });
 
-        if (listHtml === '') listHtml = '<p style="text-align:center; color:#ccc; margin-top:20px;">這天還沒有上傳影片喔 🌱</p>';
+        if (listHtml === '') listHtml = '<p style="text-align:center; color:#ccc; margin-top:20px;">這裡還沒有影片喔 🌱</p>';
         document.getElementById('video-modal-list').innerHTML = listHtml;
     };
 
     function createVideoItemHtml(key, owner, title, url) {
         const icon = owner === '小寶' ? '🐶' : '🐰';
-        const canDelete = owner === currentUser;
+        const canEdit = owner === currentUser;
         return `
         <div style="display:flex; justify-content:space-between; align-items:center; background:#f5fff5; padding:12px 15px; border-radius:12px; margin-bottom:10px; border:1px solid #e2f3e2;">
             <div style="cursor:pointer; flex:1; overflow:hidden;" onclick="window.open('${url}', '_blank')">
                 <span style="margin-right:8px; font-size:1.2rem;">${icon}</span>
                 <span style="color:var(--text-color); font-weight:bold; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; display:inline-block; max-width:200px; vertical-align:middle;">${title}</span>
             </div>
-            ${canDelete ? `<button onclick="deleteVideo('${key}')" style="background:none; border:none; color:#e08e9b; font-size:1.5rem; cursor:pointer; padding:0 0 0 10px;">&times;</button>` : ''}
+            ${canEdit ? `<button onclick="editVideo('${key}')" style="background:var(--accent-pink); border:1px solid var(--primary-pink); color:var(--deep-pink); border-radius:8px; font-size:0.8rem; cursor:pointer; padding:4px 10px; margin-left:10px; font-weight:bold; flex-shrink:0;">修改</button>` : ''}
         </div>`;
     }
 
@@ -360,13 +374,49 @@
         });
     };
 
-    window.deleteVideo = (key) => {
-        if(confirm("確定要刪除這支影片嗎？🗑️")) {
+    window.editVideo = (key) => {
+        const vData = globalData.videos[window.currentVideoDate][key];
+        let oldTitle = "本日分享影片";
+        let oldUrl = "";
+        
+        if (typeof vData === 'string') {
+            oldUrl = vData;
+        } else {
+            oldTitle = vData.title;
+            oldUrl = vData.url;
+        }
+
+        const newTitle = prompt("✏️ 修改影片名稱：\n(若要刪除這支影片，請把名稱「清空」後按確定即可)", oldTitle);
+        if (newTitle === null) return; 
+
+        if (newTitle.trim() === "") {
+            if (confirm("確定要刪除這支影片嗎？🗑️")) {
+                remove(ref(db, `coupleDataV8/videos/${window.currentVideoDate}/${key}`));
+            }
+            return;
+        }
+
+        const newUrl = prompt("🔗 修改影片連結：", oldUrl);
+        if (newUrl === null || newUrl.trim() === "") return;
+
+        if (typeof vData === 'string') {
+            // 升級舊版格式
             remove(ref(db, `coupleDataV8/videos/${window.currentVideoDate}/${key}`));
+            push(ref(db, `coupleDataV8/videos/${window.currentVideoDate}`), {
+                owner: currentUser,
+                title: newTitle.trim(),
+                url: newUrl.trim(),
+                timestamp: serverTimestamp()
+            });
+        } else {
+            // 更新新版格式
+            update(ref(db, `coupleDataV8/videos/${window.currentVideoDate}/${key}`), {
+                title: newTitle.trim(),
+                url: newUrl.trim()
+            });
         }
     };
 
-    // --- 補蓋章邏輯 (加入願望捕捉) ---
     window.retroStamp = (key) => {
         const partner = userMap[currentUser].partner;
         if(confirm(`確定要幫 ${partner} 補蓋章嗎？✨\n(系統會自動幫寶貝將未完成的目標打勾喔！)`)) {
@@ -375,7 +425,6 @@
                 hData.status = 'completed';
                 if(hData.items) hData.items.forEach(i => i.d = true);
                 
-                // 如果這天有遺留的願望，將其加入神燈
                 if (hData.wish && hData.wish.trim() !== "") {
                     push(ref(db, 'coupleDataV8/wishes'), { owner: hData.owner, text: hData.wish });
                     delete hData.wish; 
@@ -386,7 +435,6 @@
         }
     };
 
-    // --- 神燈實現邏輯 ---
     window.fulfillWish = (wishKey) => {
         if(confirm("太棒了！確定已經幫寶貝實現這個願望了嗎？✨🧞‍♂️")) {
             remove(ref(db, `coupleDataV8/wishes/${wishKey}`));
@@ -433,19 +481,17 @@
         set(ref(db, `coupleDataV8/active/${currentUser}`), globalData.active[currentUser]);
     };
     
-    // --- 蓋章完成 (加入願望轉移邏輯) ---
     window.approvePartner = () => {
         const p = userMap[currentUser].partner, pd = globalData.active[p];
         if(!pd) return;
         pd.status = 'completed';
 
-        // 將願望存入神燈區
         if (pd.wish && pd.wish.trim() !== "") {
             push(ref(db, 'coupleDataV8/wishes'), { owner: p, text: pd.wish, timestamp: serverTimestamp() });
         }
 
         const finished = { ...pd, timestamp: serverTimestamp() };
-        delete finished.wish; // 從足跡中刪除願望以保持乾淨
+        delete finished.wish; 
         push(ref(db, 'coupleDataV8/history'), finished);
         set(ref(db, `coupleDataV8/active/${p}`), pd);
     };
@@ -466,7 +512,6 @@
         const myActive = globalData.active[currentUser], pActive = globalData.active[partner], tmPlan = globalData.tomorrow[currentUser];
         const currentMonthStr = getLogicDate().substring(0, 7); 
 
-        // 任務區
         const myS = document.getElementById('my-section');
         if (!myActive || isEditingToday) {
             myS.innerHTML = `<h3>✍ ${isEditingToday ? '修改' : '設定'}今日目標</h3><input type="text" id="g1" placeholder="目標 1"><input type="text" id="g2" placeholder="目標 2"><input type="text" id="g3" placeholder="目標 3"><input type="text" id="g-wish" class="wish-input" placeholder="🎁 完成後，我的願望是..."><button class="main-btn" onclick="submitGoals()">儲存 ✨</button>${isEditingToday ? `<button class="edit-btn" onclick="cancelEditToday()">取消</button>` : ''}`;
@@ -481,14 +526,11 @@
             pS.innerHTML = `<div class="goal-card">${pActive.status === 'completed' ? '<div class="stamp">💮<span>棒棒</span></div>' : ''}<h4>${partner}的任務</h4>${pActive.wish ? `<div class="wish-box">🎁 寶貝的願望：${pActive.wish}</div>` : ''}${pActive.items.map(it => `<div class="goal-item"><input type="checkbox" ${it.d ? 'checked' : ''} disabled><span>${it.t}</span></div>`).join('')}${pActive.status === 'reviewing' ? `<button class="main-btn" style="background:#ff6b81" onclick="approvePartner()">💮 幫 ${partner} 蓋章</button>` : ''}</div>`; 
         }
 
-        // 神燈願望區渲染
         const wData = Object.entries(globalData.wishes || {});
         const pWishes = wData.filter(([,v]) => v.owner === partner);
         const mWishes = wData.filter(([,v]) => v.owner === currentUser);
 
         let wishHtml = `<div style="display:flex; gap:10px; width:100%;">`;
-        
-        // 寶貝的願望 (可以幫忙打勾實現)
         wishHtml += `<div style="flex:1; background:#fff9e6; border:1px dashed #ffe082; border-radius:15px; padding:15px;">`;
         wishHtml += `<h4 style="text-align:center; color:#b8860b; margin-top:0; font-size:0.95rem;">${partner}的願望</h4>`;
         if(pWishes.length === 0) wishHtml += `<p style="font-size:0.8rem; color:#d4af37; text-align:center;">目前沒有願望</p>`;
@@ -500,7 +542,6 @@
         });
         wishHtml += `</div>`;
 
-        // 我的願望 (僅供查看等待對方實現)
         wishHtml += `<div style="flex:1; background:#fffafb; border:1px dashed var(--accent-pink); border-radius:15px; padding:15px;">`;
         wishHtml += `<h4 style="text-align:center; color:var(--deep-pink); margin-top:0; font-size:0.95rem;">我的願望</h4>`;
         if(mWishes.length === 0) wishHtml += `<p style="font-size:0.8rem; color:#e08e9b; text-align:center;">目前沒有願望</p>`;
@@ -513,14 +554,12 @@
         wishHtml += `</div></div>`;
         document.getElementById('wish-area').innerHTML = wishHtml;
 
-        // 明日
         const tmArea = document.getElementById('tomorrow-area');
         if (!tmPlan || isEditingTomorrow) {
             tmArea.innerHTML = `<div class="tomorrow-board"><h4>${isEditingTomorrow ? '✍ 修改明日計畫' : '提前規劃明天'}</h4><input type="text" id="t1" placeholder="明日計畫 1"><input type="text" id="t2" placeholder="明日計畫 2"><input type="text" id="t3" placeholder="明日計畫 3"><input type="text" id="t-wish" class="wish-input" placeholder="🎁 明日小許願"><button class="main-btn" style="background:#a5d6a7" onclick="saveTomorrowPlan()">儲存 ✨</button></div>`;
             if(isEditingTomorrow && tmPlan) setTimeout(() => { tmPlan.items.forEach((it, i) => { if(document.getElementById('t'+(i+1))) document.getElementById('t'+(i+1)).value = it.t; }); document.getElementById('t-wish').value = tmPlan.wish || ""; }, 0);
         } else { tmArea.innerHTML = `<div class="tomorrow-board" style="text-align:center;"><p style="color:#4caf50; font-weight:bold;">明日計畫已備妥 🚀</p><button class="edit-btn" style="border-color:#a5d6a7; color:#4caf50;" onclick="editTomorrow()">修改</button></div>`; }
 
-        // 留言
         const msgList = document.getElementById('message-list');
         const msgs = Object.values(globalData.messages || {}).sort((a,b) => a.timestamp - b.timestamp);
         msgList.innerHTML = msgs.length > 0 ? msgs.map(m => `<div class="msg-bubble ${m.sender === currentUser ? 'msg-right' : 'msg-left'}">${m.text}</div>`).join('') : '<p style="text-align:center;color:#ccc;font-size:0.8rem;">還沒有留言...</p>';
@@ -529,7 +568,6 @@
         renderCalendar('stats', statsViewDate, 'stats-area');
         renderCalendar('video', videoViewDate, 'video-calendar-area');
 
-        // 足跡
         const histRaw = Object.entries(globalData.history || {}).sort(([,a], [,b]) => (b.timestamp||0) - (a.timestamp||0));
         const groupedDates = [];
         histRaw.forEach(([key, h]) => {
@@ -617,14 +655,14 @@
                 });
                 
                 const isFuture = dateStr > logicTodayStr;
-                const clickEvent = isFuture ? '' : `onclick="openVideoModal('${dateStr}')"`;
+                const clickEvent = isFuture ? '' : `onclick="openVideoModal('${dateStr}', null)"`;
                 const styleStr = isFuture ? 'opacity:0.4; cursor:not-allowed; background:transparent;' : '';
 
                 html += `<div class="cal-day" style="${styleStr}" ${clickEvent}>
                     <span style="font-size:0.7rem; color:#ccc;">${d}</span>
                     <div style="display:flex; gap:2px; font-size:1.1rem; margin-top:2px;">
-                        ${hasDog ? `<span>🐶</span>` : ''}
-                        ${hasRabbit ? `<span>🐰</span>` : ''}
+                        ${hasDog ? `<span onclick="event.stopPropagation(); openVideoModal('${dateStr}', '小寶')" style="cursor:pointer;">🐶</span>` : ''}
+                        ${hasRabbit ? `<span onclick="event.stopPropagation(); openVideoModal('${dateStr}', '大寶')" style="cursor:pointer;">🐰</span>` : ''}
                     </div>
                 </div>`;
             }
