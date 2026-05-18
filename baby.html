@@ -113,7 +113,7 @@
         <button onclick="closeVideoModal()" style="position:absolute; top:15px; right:20px; background:none; border:none; font-size:1.8rem; color:#aaa; cursor:pointer;">&times;</button>
         <h3 id="video-modal-title" style="color:var(--deep-pink); margin-top:0;">🎥 影片清單</h3>
         <div id="video-modal-list" style="overflow-y:auto; padding:5px; text-align:left; flex-grow:1;"></div>
-        <button class="main-btn" style="margin-top:15px; background:var(--deep-pink);" onclick="addNewVideo()">＋ 新增影片</button>
+        <button id="add-video-btn" class="main-btn" style="margin-top:15px; background:var(--deep-pink);" onclick="addNewVideo()">＋ 新增影片</button>
     </div>
 </div>
 
@@ -319,7 +319,16 @@
     window.renderVideoModal = () => {
         const dateStr = window.currentVideoDate;
         const filter = window.currentVideoFilter;
+        // 👇👇 加入這段：尋找按鈕與判斷身分 👇👇
+        const addBtn = document.getElementById('add-video-btn');
+        const partner = userMap[currentUser].partner; // 抓取對方的名字
         
+        if (filter === partner) {
+            addBtn.style.display = 'none'; // 如果看的是對方的頻道，就把按鈕藏起來
+        } else {
+            addBtn.style.display = 'block'; // 否則就正常顯示
+        }
+        // 👆👆 加入到這裡結束 👆👆
         let titleText = `🎥 ${dateStr}`;
         if (filter === '小寶') titleText += '<br><small style="font-size:0.9rem; color:#888;">🐶 小寶的專屬頻道</small>';
         if (filter === '大寶') titleText += '<br><small style="font-size:0.9rem; color:#888;">🐰 大寶的專屬頻道</small>';
