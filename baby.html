@@ -150,7 +150,7 @@
     <div id="video-calendar-area"></div>
 </div>
 
-<div class="section-title" style="justify-content: center;">💬 暖呼呼小語</div>
+<div class="section-title" style="justify-content: center;">💬 呼~悄悄話</div>
 <div class="container" style="padding:15px; box-shadow:none; border:1px solid var(--accent-pink);">
     <div id="message-list" class="message-list"></div>
     <div style="display:flex; gap:8px;">
@@ -217,7 +217,30 @@
         const [y, m, d] = logicDate.split('-');
         return `${parseInt(m)}月${parseInt(d)}日`;
     }
-
+// 👇 新增這段：用來計算「邏輯上的週一」日期
+    function getLogicWeekStart(dateStr = null) {
+        let d;
+        if (dateStr) {
+            // 如果是舊資料的日期，直接以中午12點當基準，避免時區吃掉一天
+            const [y, m, day] = dateStr.split('-');
+            d = new Date(y, m - 1, day, 12, 0, 0); 
+        } else {
+            // 抓現在時間，並減去 4 小時 (凌晨 4 點換日)
+            d = new Date();
+            d.setHours(d.getHours() - 4); 
+        }
+        
+        const dayOfWeek = d.getDay();
+        // JavaScript 的 getDay() 0是週日。我們要改成週一(1)為一週的開始
+        const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1; 
+        d.setDate(d.getDate() - diff);
+        
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${dd}`;
+    }
+    // 👆 新增到這裡結束
     onValue(dbRef, (snapshot) => {
         const d = snapshot.val() || {};
         const logicToday = getLogicDate();
@@ -243,8 +266,21 @@
             }
         });
 
-        Object.keys(rawMessages).forEach(k => { if (rawMessages[k].logicDate !== logicToday) { updateData[`messages/${k}`] = null; needsUpdate = true; } });
-
+       // 👇 替換成這段：判斷是否跟這週的「邏輯週一」一樣，不一樣才刪除
+const currentLogicWeek = getLogicWeekStart();
+Object.keys(rawMessages).forEach(k => { 
+    // 優先抓取我們新設定的 logicWeek，如果沒有（代表是以前的舊留言），就用 logicDate 去推算
+    let msgLogicWeek = rawMessages[k].logicWeek;
+    if (!msgLogicWeek && rawMessages[k].logicDate) {
+        msgLogicWeek = getLogicWeekStart(rawMessages[k].logicDate);
+    }
+    
+    if (msgLogicWeek !== currentLogicWeek) { 
+        updateData[`messages/${k}`] = null; 
+        needsUpdate = true; 
+    } 
+});
+// 👆 替換到這裡結束
         if (needsUpdate) { update(dbRef, updateData); return; }
 
         globalData = { 
@@ -510,7 +546,7 @@
         if(!input.value.trim()) return;
         push(ref(db, 'coupleDataV8/messages'), {
             sender: currentUser, text: input.value, time: new Date().getHours() + ":" + new Date().getMinutes().toString().padStart(2, '0'), 
-            logicDate: getLogicDate(), timestamp: serverTimestamp()
+            logicDate: getLogicDate(),logicWeek: getLogicWeekStart(),  timestamp: serverTimestamp()
         });
         input.value = '';
     };
